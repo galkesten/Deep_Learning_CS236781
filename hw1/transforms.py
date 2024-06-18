@@ -1,7 +1,6 @@
 import torch
 
 
-
 class TensorView(object):
     """
     A transform that returns a new view of a tensor.
@@ -10,8 +9,9 @@ class TensorView(object):
     def __init__(self, *view_dims):
         self.view_dims = view_dims
 
-    def __call__(self, tensor: torch.Tensor):  
+    def __call__(self, tensor: torch.Tensor):
         return tensor.view(*self.view_dims)
+
 
 class InvertColors(object):
     """
@@ -26,7 +26,7 @@ class InvertColors(object):
         """
         # TODO: Invert the colors of the input image.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        return 1. - x  #max value in this case is 1 , so to invert the image means flip to the complement color
         # ========================
 
 
@@ -38,7 +38,8 @@ class FlipUpDown(object):
         """
         # TODO: Flip the input image so that up is down.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        flipped = torch.flip(x, [1])
+        return flipped
         # ========================
 
 
