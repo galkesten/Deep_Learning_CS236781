@@ -52,12 +52,17 @@ class SVMHingeLoss(ClassifierLoss):
 
         loss = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        correct_classes_indexes = y.view(-1, 1) # create column vector where each index is in an array ([[1],[2],...)
+        correct_classes_scores = torch.gather(x_scores, 1, correct_classes_indexes)
+        margin_loss_matrix = self.delta + (x_scores - correct_classes_scores)
+        torch.clamp(margin_loss_matrix, min=0.0)
+        loss_each_sample = torch.sum(margin_loss_matrix, 1)-self.delta #we need to substruct delta from each row because we dont want to punish for the true label score
+        loss = torch.mean(loss_each_sample)
         # ========================
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        #raise NotImplementedError()
         # ========================
 
         return loss
