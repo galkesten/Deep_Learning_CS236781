@@ -29,10 +29,20 @@ generalization error.
 Moreover, the training set should be large enough for effective learning, and the test set should be large enough for
 reliable generalization error estimation.
 
-3.Answer:
+3. True:
+The purpose of cross-validation is to tune hyperparameters and evaluate the model using only the training data. 
+If the test set is used during cross-validation, it leads to data leakage, 
+as information from the test set would influence the training process. 
+This compromises the integrity of the test set, leading to overly optimistic performance estimates 
+and failing to provide an unbiased measure of the model's true performance on unseen data.
 
-
-4.Answer:
+4. True:
+In cross-validation, the dataset is split into multiple folds. 
+In each iteration, one fold is used as the validation set while the remaining folds are used for training. 
+This process is repeated for each fold, allowing the model to be trained and validated on different subsets of the data.
+The performance on the validation sets across all folds helps in tuning hyperparameters and provides 
+an estimate of the model's generalization error, 
+indicating how well it is expected to perform on unseen data with the chosen hyperparameters in this iteration.
 
 """
 

@@ -26,7 +26,8 @@ class InvertColors(object):
         """
         # TODO: Invert the colors of the input image.
         # ====== YOUR CODE: ======
-        return 1. - x  #max value in this case is 1 , so to invert the image means flip to the complement color
+        # max value in this case is 1 , so to invert the image means flip to the complement color
+        return 1. - x
         # ========================
 
 

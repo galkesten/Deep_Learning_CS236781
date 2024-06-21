@@ -11,6 +11,7 @@ def random_labelled_image(
     """
     Generates a random image and a random class label for it.
     :param shape: The shape of the generated image e.g. (C, H, W).
+    : C- channels(that is  the number of the channels in the image), W- width , H -high
     :param num_classes: Number of classes. The label should be in [0, num_classes-1].
     :param low: Minimal value in the image (inclusive).
     :param high: Maximal value in the image (exclusive).
@@ -20,8 +21,11 @@ def random_labelled_image(
     # TODO:
     #  Implement according to the docstring description.
     # ====== YOUR CODE: ======
+    # Generate a random image with uniform distribution on [low, high)
+    # image = torch.radient(low=low, high=high, size=shape, dtype=dtype)
     image = torch.rand(shape) * (high - low) + low
     image = image.type(dtype)
+    # .item() converts this single-element tensor into a Python scalar (integer).
     label = torch.randint(low=0, high=num_classes, size=(1,)).item()
     # ========================
     return image, label
@@ -37,7 +41,10 @@ def torch_temporary_seed(seed: int):
     # TODO:
     #  Implement this context manager as described.
     #  See torch.random.get/set_rng_state(), torch.random.manual_seed().
-    # ====== YOUR CODE: ======ß
+    # he try block sets the new state and then yields control back to the caller.
+    # the finally block ensures that the original state is restored after the block inside the with
+    # statement is executed, even if an exception occurs.
+    # ====== YOUR CODE: ======
     last_seed_value = torch.random.get_rng_state()
     # ========================
     try:
@@ -84,7 +91,7 @@ class RandomImageDataset(Dataset):
         #  the random state outside this method.
         #  Raise a ValueError if the index is out of range.
         # ====== YOUR CODE: ======
-        if index < 0 or index >= self.num_samples:
+        if index < 0 or index >= self.num_samples:                                                                        # why >= and not just greater ?
             raise ValueError()
         temp_seed = index
         with torch_temporary_seed(temp_seed):
@@ -154,7 +161,7 @@ class SubsetDataset(Dataset):
         #  Return the item at index + offset from the source dataset.
         #  Raise an IndexError if index is out of bounds.
         # ====== YOUR CODE: ======
-        if index < 0 or index >= self.subset_len:
+        if index < 0 or index >= self.subset_len:                                                                         # why >= and not just greater ?
             raise IndexError()
         return self.source_dataset[index + self.offset]
         # ========================
