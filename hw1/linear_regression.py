@@ -32,7 +32,7 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
 
         y_pred = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        y_pred = X @ self.weights_
         # ========================
 
         return y_pred
@@ -50,10 +50,15 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         #  Use only numpy functions. Don't forget regularization!
 
         w_opt = None
+        #w_opt = (X^TX/N +lambda *I )^-1 + (x^Ty/N)
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        N = X.shape[0]
+        M = X.shape[1]
+        gram = X.T @ X
+        identity = np.identity(n=gram.shape[0])
+        identity[0, 0] = 0 # optimal b should not include regularization
+        w_opt = np.linalg.inv(gram/N + self.reg_lambda * identity) @ (X.T @ y / N)
         # ========================
-
         self.weights_ = w_opt
         return self
 
@@ -77,7 +82,11 @@ def fit_predict_dataframe(
     """
     # TODO: Implement according to the docstring description.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    y = df[target_name]
+    train = df.drop(columns=[target_name], axis=1, inplace=False)
+    if feature_names is None:
+        feature_names = train.columns
+    y_pred = model.fit_predict(train[feature_names].to_numpy(), y.to_numpy())
     # ========================
     return y_pred
 
@@ -100,7 +109,8 @@ class BiasTrickTransformer(BaseEstimator, TransformerMixin):
 
         xb = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        ones_col = np.ones((X.shape[0], 1))
+        xb = np.hstack([ones_col, X])
         # ========================
 
         return xb
@@ -117,7 +127,7 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
         # TODO: Your custom initialization, if needed
         # Add any hyperparameters you need and save them as above
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        self.poly = PolynomialFeatures(degree=degree)
         # ========================
 
     def fit(self, X, y=None):
@@ -139,9 +149,12 @@ class BostonFeaturesTransformer(BaseEstimator, TransformerMixin):
 
         X_transformed = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
-
+        X_transformed = np.copy(X)
+        X_transformed[:, 0] = np.log(X_transformed[:, 0]) #apply log on CRIM
+        X_transformed[:, 12] = np.log(X_transformed[:, 12])#apply log on LSTAT
+        X_transformed = np.delete (X_transformed, 3, axis=1)  # delete CHAS
+        X_transformed = self.poly.fit_transform(X_transformed)
+        # ========================)
         return X_transformed
 
 
@@ -163,7 +176,8 @@ def top_correlated_features(df: DataFrame, target_feature, n=5):
     # TODO: Calculate correlations with target and sort features by it
 
     # ====== YOUR CODE: ======
-    correlations = df.iloc[:, :-1].corrwith(df[target_feature],method='pearson')
+    relevant_features_df = df.drop(target_feature, axis=1, inplace=False)
+    correlations = relevant_features_df.corrwith(df[target_feature], method='pearson')
     correlations.sort_values(ascending=False, inplace=True, key=np.abs)
 
     top_n_features = correlations.index[:n].to_numpy()
@@ -183,7 +197,8 @@ def mse_score(y: np.ndarray, y_pred: np.ndarray):
 
     # TODO: Implement MSE using numpy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    residuals = y - y_pred
+    mse = np.mean(np.square(residuals))
     # ========================
     return mse
 
@@ -198,7 +213,9 @@ def r2_score(y: np.ndarray, y_pred: np.ndarray):
 
     # TODO: Implement R^2 using numpy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    diff_y_avg_y = y - np.mean(y)
+    residuals = y - y_pred
+    r2 = 1 - (np.sum(np.square(residuals))/(np.sum(np.square(diff_y_avg_y))))
     # ========================
     return r2
 
@@ -231,7 +248,10 @@ def cv_best_hyperparams(
     #  - You can use MSE or R^2 as a score.
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    params_dict = {'linearregressor__reg_lambda': lambda_range, 'bostonfeaturestransformer__degree': degree_range}
+    scoring = sklearn.metrics.make_scorer(mse_score, greater_is_better=False)
+    grid_search = sklearn.model_selection.GridSearchCV(model, params_dict, cv=k_folds, scoring=scoring)
+    grid_search.fit(X, y)
     # ========================
-
+    best_params = grid_search.best_params_
     return best_params
