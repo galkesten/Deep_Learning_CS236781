@@ -163,7 +163,11 @@ def top_correlated_features(df: DataFrame, target_feature, n=5):
     # TODO: Calculate correlations with target and sort features by it
 
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    correlations = df.iloc[:, :-1].corrwith(df[target_feature],method='pearson')
+    correlations.sort_values(ascending=False, inplace=True, key=np.abs)
+
+    top_n_features = correlations.index[:n].to_numpy()
+    top_n_corr = correlations.iloc[:n].to_numpy()
     # ========================
 
     return top_n_features, top_n_corr

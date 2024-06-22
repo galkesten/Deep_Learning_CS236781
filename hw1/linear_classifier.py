@@ -102,7 +102,28 @@ class LinearClassifier(object):
             #     using the weight_decay parameter.
 
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            cumulative_loss_train = 0.0
+            accuracy_train = 0.0
+            for x, y in dl_train:
+                y_pred, class_scores = self.predict(x)
+                accuracy_train += self.evaluate_accuracy(y, y_pred).item()
+                loss = loss_fn(x,y, class_scores, y_pred) + (0.5 * weight_decay * torch.sum(self.weights ** 2))
+                cumulative_loss_train += loss.item()
+                grad = loss_fn.grad() + weight_decay*self.weights
+                self.weights -= learn_rate * grad
+
+            train_res.accuracy.append(accuracy_train / len(dl_train))
+            train_res.loss.append(cumulative_loss_train/len(dl_train))
+
+            cumulative_loss_val = 0.0
+            accuracy_val = 0.0
+            for x, y in dl_valid:
+                y_pred, class_scores = self.predict(x)
+                accuracy_val += self.evaluate_accuracy(y, y_pred).item()
+                cumulative_loss_val += loss_fn(x, y, class_scores, y_pred) + (0.5 * weight_decay * torch.sum(self.weights ** 2))
+
+            valid_res.accuracy.append(accuracy_val / len(dl_valid))
+            valid_res.loss.append(cumulative_loss_val/len(dl_valid))
             # ========================
             print(".", end="")
 
@@ -123,7 +144,12 @@ class LinearClassifier(object):
         #  The output shape should be (n_classes, C, H, W).
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if has_bias:
+            w= self.weights[1:, :]  # Exclude the bias term
+        else:
+            w = self.weights
+
+        w_images = w.T.view(self.n_classes, *img_shape)
         # ========================
 
         return w_images
@@ -136,7 +162,7 @@ def hyperparams():
     #  Manually tune the hyperparameters to get the training accuracy test
     #  to pass.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    hp.update(weight_std=0.01, learn_rate=0.01, weight_decay=0.2)
     # ========================
 
     return hp

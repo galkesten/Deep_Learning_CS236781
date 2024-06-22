@@ -52,17 +52,18 @@ class SVMHingeLoss(ClassifierLoss):
 
         loss = None
         # ====== YOUR CODE: ======
-        correct_classes_indexes = y.view(-1, 1) # create column vector where each index is in an array ([[1],[2],...)
-        correct_classes_scores = torch.gather(x_scores, 1, correct_classes_indexes)
-        margin_loss_matrix = self.delta + (x_scores - correct_classes_scores)
-        torch.clamp(margin_loss_matrix, min=0.0)
-        loss_each_sample = torch.sum(margin_loss_matrix, 1)-self.delta #we need to substruct delta from each row because we dont want to punish for the true label score
-        loss = torch.mean(loss_each_sample)
+        correct_classes_scores = torch.gather(x_scores, 1, y.view(-1, 1))
+        M = self.delta + (x_scores - correct_classes_scores)
+        M = torch.clamp(M, min=0.0) #zero out negative losses (like applying max)
+        loss_per_sample = torch.sum(M, 1)-self.delta #we need to substruct delta from each row because we dont want to punish for the true label score
+        loss = torch.mean(loss_per_sample)
         # ========================
 
         # TODO: Save what you need for gradient calculation in self.grad_ctx
         # ====== YOUR CODE: ======
-        #raise NotImplementedError()
+        self.grad_ctx["M"] = M
+        self.grad_ctx["x"] = x
+        self.grad_ctx["y"] = y
         # ========================
 
         return loss
@@ -80,7 +81,15 @@ class SVMHingeLoss(ClassifierLoss):
 
         grad = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        M = self.grad_ctx["M"]
+        x = self.grad_ctx["x"]
+        y = self.grad_ctx["y"]
+        N = x.shape[0]
+
+        G = (M > 0).float()
+        G[torch.arange(N), y] = -1 * (torch.sum(G, dim=1) - G[torch.arange(N), y]) # we want to count number of 1's i each row except of the correct class cell
+        grad = x.T @ G / N
+
         # ========================
 
         return grad
