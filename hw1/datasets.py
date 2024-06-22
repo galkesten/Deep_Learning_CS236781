@@ -11,7 +11,6 @@ def random_labelled_image(
     """
     Generates a random image and a random class label for it.
     :param shape: The shape of the generated image e.g. (C, H, W).
-    : C- channels(that is  the number of the channels in the image), W- width , H -high
     :param num_classes: Number of classes. The label should be in [0, num_classes-1].
     :param low: Minimal value in the image (inclusive).
     :param high: Maximal value in the image (exclusive).
@@ -22,9 +21,7 @@ def random_labelled_image(
     #  Implement according to the docstring description.
     # ====== YOUR CODE: ======
     # Generate a random image with uniform distribution on [low, high)
-    # image = torch.radient(low=low, high=high, size=shape, dtype=dtype)
-    image = torch.rand(shape) * (high - low) + low
-    image = image.type(dtype)
+    image = torch.randint(low=low, high=high, size=shape, dtype=dtype)
     # .item() converts this single-element tensor into a Python scalar (integer).
     label = torch.randint(low=0, high=num_classes, size=(1,)).item()
     # ========================
@@ -91,7 +88,7 @@ class RandomImageDataset(Dataset):
         #  the random state outside this method.
         #  Raise a ValueError if the index is out of range.
         # ====== YOUR CODE: ======
-        if index < 0 or index >= self.num_samples:                                                                        # why >= and not just greater ?
+        if index < 0 or index >= self.num_samples:
             raise ValueError()
         temp_seed = index
         with torch_temporary_seed(temp_seed):
@@ -161,7 +158,7 @@ class SubsetDataset(Dataset):
         #  Return the item at index + offset from the source dataset.
         #  Raise an IndexError if index is out of bounds.
         # ====== YOUR CODE: ======
-        if index < 0 or index >= self.subset_len:                                                                         # why >= and not just greater ?
+        if index < 0 or index >= self.subset_len:
             raise IndexError()
         return self.source_dataset[index + self.offset]
         # ========================
