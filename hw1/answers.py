@@ -71,14 +71,45 @@ An equation: $e^{i\pi} -1 = 0$
 
 part2_q1 = r"""
 **Your answer:**
+The selection of $\Delta > 0$ is arbitrary because given a specific $\Delta$ and specific $\lambda$, the direction of the optimal solution to the problem will stay the same if we scale $\Delta$ to $\alpha \Delta$ and $\lambda$ to $\frac{\lambda}{\alpha}$ for $\alpha > 0$.
 
+**Proof:**
+Let's say $\mathbf{W}^*$ is an optimal solution for a problem with $\Delta > 0$ and $\lambda > 0$:
+$$
+L_1(\mathbf{W}^*) = \frac{1}{N} \sum_{i=1}^{N} \sum_{j \neq y_i} \max \left( 0, \Delta + \mathbf{w_j^*}^\top \mathbf{x_i} - \mathbf{w_{y_i}^*}^\top \mathbf{x_i} \right) + \frac{\lambda}{2} \| \mathbf{W}^* \|^2
+$$
+By the optimality condition, $L_1(\mathbf{W}^*) \leq L_1(\mathbf{W})$ for all other $\mathbf{W}$.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+If we scale the inequality by $\alpha > 0$, we get $\alpha L_1(\mathbf{W}^*) \leq \alpha L_1(\mathbf{W})$ for all other $\mathbf{W}$.
+
+Scaling $\Delta$ to $\alpha \Delta$ and $\lambda$ to $\frac{\lambda}{\alpha}$ will create the following problem:
+
+$$
+L_2(\mathbf{W}) = \frac{1}{N} \sum_{i=1}^{N} \sum_{j \neq y_i} \max \left( 0, \alpha \Delta + \mathbf{w_j}^\top \mathbf{x_i} - \mathbf{w_{y_i}}^\top \mathbf{x_i} \right) + \frac{\lambda}{2\alpha} \| \mathbf{W} \|^2
+$$
+
+Evaluating the loss $L_2$ for $\alpha \mathbf{W}^*$, we get:
+
+$$
+L_2(\alpha \mathbf{W}^*) = \frac{1}{N} \sum_{i=1}^{N} \sum_{j \neq y_i} \max \left( 0, \alpha \Delta + (\alpha \mathbf{w_j^*})^\top \mathbf{x_i} - (\alpha \mathbf{w_{y_i}^*})^\top \mathbf{x_i} \right) + \frac{\lambda}{2\alpha} \| \alpha \mathbf{W}^* \|^2
+$$
+
+$$
+= \frac{1}{N} \sum_{i=1}^{N} \sum_{j \neq y_i} \alpha \max \left( 0, \Delta + \mathbf{w_j^*}^\top \mathbf{x_i} - \mathbf{w_{y_i}^*}^\top \mathbf{x_i} \right) + \frac{\lambda \alpha^2}{2\alpha} \| \mathbf{W}^* \|^2
+$$
+
+$$
+= \alpha \left( \frac{1}{N} \sum_{i=1}^{N} \sum_{j \neq y_i} \max \left( 0, \Delta + \mathbf{w_j^*}^\top \mathbf{x_i} - \mathbf{w_{y_i}^*}^\top \mathbf{x_i} \right) + \frac{\lambda}{2} \| \mathbf{W}^* \|^2 \right)
+$$
+
+$$
+= \alpha L_1(\mathbf{W}^*) \leq \alpha L_1(\mathbf{W}) = L_2(\alpha \mathbf{W}) = L_2(\mat{W'}) \;for\, all\, \mat{W'}
+$$
+
+The mapping $\mathbf{W}' = \alpha \mathbf{W}$ is a bijection so optimality is preserved. 
+Therefore, $\alpha \mathbf{W}^*$ is an optimal solution for $L_2$.
+
+Thus, scaling $\Delta$ and $\lambda$ in such a way preserves the optimal solution direction, indicating that what matters in the SVM problem is the ratio between $\Delta$ and $\lambda$. The choice of $\Delta$ is arbitrary as long as the ratio $\frac{\Delta}{\lambda}$ is preserved.
 
 """
 
