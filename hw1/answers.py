@@ -115,27 +115,42 @@ Thus, scaling $\Delta$ and $\lambda$ in such a way preserves the optimal solutio
 
 part2_q2 = r"""
 **Your answer:**
+From the weights visualization, we can see that the linear model has learned the general shapes of most digits. 
+The areas with higher weight values correspond to where the digit's pixels are white, 
+which means the model has picked up the digit shapes. The model assigns higher weights to pixels 
+it thinks are more important for identifying each digit.
 
+For digits like 0, 1, 2, and 3, the weights form clear, recognizable shapes, 
+showing that the model has learned these digits well. But for digits like 4, 5, 6, 7, and 9, the weights are less clear, 
+making it harder for the model to distinguish them accurately. We see the model often mistakes 4 for 7, 4 for 9, and 5 for 6. These similarities in weights and shapes lead to misclassifications,
+indicating that a simple linear model struggles with these more complex shapes.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+Additionally, it's important to note that the model's weights depend on the position of the digits in the image. 
+If a digit is moved within the image, the model's performance might get worse. 
 """
 
 part2_q3 = r"""
 **Your answer:**
+1) Based on the graph, it looks like the learning rate we chose (0.01) is pretty good. 
+The loss decreases steadily during training until it converges to a minimum. 
+The graph is smooth and doesn't show a lot of fluctuations.
+If the learning rate was too low, we would see a very slow decrease in the loss. 
+By the end of the training, we might barely see it converging to a specific value. 
+The graph would just show a slow, almost linear decrease.
+On the other hand, if the learning rate was too high, we would see a lot of fluctuations in the graph.
+The loss values would jump up and down a lot, and we wouldn't see a clear convergence. 
+This is because large gradient steps can cause the optimization process to overshoot the minimum,
+leading to oscillations rather than convergence.
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+2) Based on the graph of the training and test set accuracy, 
+it looks like the model is slightly overfitted to the training set.
+The training accuracy is a bit higher than the validation accuracy, but the difference isn't big. 
+This shows the model performs better on the training data but still does pretty well on the validation data.
+The performance on the test set is also quite good (89%) compared to train (close to 93%), which is a good indication 
+that the model learned to generalize well. 
+In the case of high overfitting, we would expect that while the training accuracy keeps increasing, 
+the validation accuracy would peak and then start to decrease as the model gets too good at the training data and starts 
+to memorize it. Underfitting is when we see low performance even on training data, which is not the case here.
 
 """
 
@@ -146,40 +161,70 @@ An equation: $e^{i\pi} -1 = 0$
 
 part3_q1 = r"""
 **Your answer:**
+In a linear regression model, 
+we assume that the labels have a linear relationship with the data, 
+with some Gaussian noise that has a mean of zero. Because of this, the ideal residual plot should show a random scatter of residuals around zero. Most residuals should be close to zero, without any specific pattern where errors are consistently positive or negative. Additionally, we want the residuals to have the same variance across all levels of the independent variables, which is called homoscedasticity.
 
+The residual plot for the top-5 features shows that the model's predictions 
+are generally close to the true values, as most residuals are centered around zero,
+with an average spread between -5 and 5. 
+However, we do notice that for higher predicted values, the spread of the residuals
+is higher, indicating slight heteroscedasticity. 
+There are also a few outliers with large residuals, 
+which the model doesn't handle well.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+After adding non-linear features and tuning the hyperparameters, 
+we see that the spread of residuals has become tighter and more centered around 
+zero, with an average spread between -2.5 and 2.5. 
+This indicates an improvement in the model's predictions, 
+with fewer large errors and a more consistent variance across 
+different predicted values.
 """
 
 part3_q2 = r"""
 **Your answer:**
+1) Yes, this is still a linear regression model. 
+Adding non-linear features means we are transforming
+the original feature space into a higher-dimensional space. 
+The model itself remains linear in this new feature space,
+ using the same learning algorithm. 
+ The difference is that we are preprocessing by creating new features, 
+ but the regression performed is still linear with respect to these new features.
+
+2)No, we can't fit just any non-linear function of the original features with this approach. 
+When we do feature engineering, we make assumptions about the types of functions we're looking for. 
+For example, by choosing polynomial features, 
+we're specifically searching for parameters of a polynomial of a certain degree, 
+not any possible function. With this approach, we must know in advance which types of functions we're looking for. 
+We can't fit any arbitrary function without knowing the structure of the function we are aiming to model. 
+This is unlike neural networks, which can learn the correct transformations themselves through training.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+3) In a linear classification model,
+the parameters define a hyperplane that represents the decision boundary.
+Adding non-linear features changes this boundary in the original feature space.
+While the decision boundary remains a hyperplane in the transformed feature space,
+it translates to a non-linear decision boundary in the original feature space.
+For example, using polynomial features can result in decision boundaries that
+are hyperbolas, circles, or other polynomial shapes in the original space.
 """
 
 part3_q3 = r"""
 **Your answer:**
+1) We learned in machine learning intro that the regularization parameter $\lambda$ can vary a lot. A high  $\lambda$ 
+encourages solutions with smaller weights, which can help with generalization, while a low 
+$\lambda$  allows the model to fit the training data better, which can lead to overfitting.
+Because $\lambda$ can take on a wide range of values, 
+using np.logspace is better than np.linspace. np.logspace allows us to explore both small and large 
+$\lambda$ values more effectively because the gaps between numbers are on a logarithmic scale, not a linear one. 
+If we used a linear scale, we would need to check a lot more hyperparameters for the same range of values.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+2) We chose 20 different values for $\lambda$  and 3 different values for the polynomial degree, 
+giving us $20 \times 3 = 60$ combinations. 
+Each combination is evaluated using 3-fold cross-validation. 
+Therefore, the model is fitted $60 \times 3 = 180$ times 
+in total during the cross-validation process. 
 
 """
 
