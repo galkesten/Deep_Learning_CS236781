@@ -26,8 +26,10 @@ We need to ensure the split is representative of the overall dataset and maintai
 Additionally, there are issues like data leakage. 
 For instance,in time series data, if the training set includes future data, the test error won't accurately estimate 
 generalization error. 
-Moreover, the training set should be large enough for effective learning, and the test set should be large enough for
-reliable generalization error estimation.
+Moreover, we should split the dataset such that we have enough data for training 
+(a half-half split for train and test might hurt the performance the model could achieve). On the other hand, 
+choosing one example for the test set might
+not be a good estimate of generalization error. So, the split needs to be balanced.
 
 3. True:
 The purpose of cross-validation is to tune hyperparameters and evaluate the model using only the training data. 
@@ -227,7 +229,5 @@ Therefore, the model is fitted $60 \times 3 = 180$ times
 in total during the cross-validation process. 
 
 """
-
-# ==============
 
 # ==============
