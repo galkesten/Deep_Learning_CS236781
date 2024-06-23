@@ -59,13 +59,6 @@ unseen data. This defeats the purpose of having a test set and can lead to overf
 A better approach is to use a train-validation split on the training set for hyperparameter tuning or to perform cross-validation.
 This way, the test set remains a true measure of the model's generalization performance.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
 """
 
 # ==============
