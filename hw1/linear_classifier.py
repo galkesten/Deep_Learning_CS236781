@@ -35,18 +35,14 @@ class LinearClassifier(object):
             class_scores: Tensor of shape (N,n_classes) with the class score
                 per sample.
         """
-
         # TODO:
         #  Implement linear prediction.
         #  Calculate the score for each class using the weights and
         #  return the class y_pred with the highest score.
-
-
         # ====== YOUR CODE: ======
         class_scores = x @ self.weights
         y_pred = torch.argmax(class_scores, dim=1)
         # ========================
-
         return y_pred, class_scores
 
     @staticmethod
@@ -64,7 +60,7 @@ class LinearClassifier(object):
         #  Do not use an explicit loop.
 
         # ====== YOUR CODE: ======
-        num_correct = (y == y_pred).sum()
+        num_correct = (y == y_pred).sum().item()                                                                          # i add here .item()
         num_samples = y.size(0)
         acc = num_correct / num_samples
         # ========================
@@ -106,8 +102,8 @@ class LinearClassifier(object):
             accuracy_train = 0.0
             for x, y in dl_train:
                 y_pred, class_scores = self.predict(x)
-                accuracy_train += self.evaluate_accuracy(y, y_pred).item()
-                loss = loss_fn(x,y, class_scores, y_pred) + (0.5 * weight_decay * torch.sum(self.weights ** 2))
+                accuracy_train += self.evaluate_accuracy(y, y_pred)
+                loss = loss_fn(x, y, class_scores, y_pred) + (0.5 * weight_decay * torch.sum(self.weights ** 2))
                 cumulative_loss_train += loss.item()
                 grad = loss_fn.grad() + weight_decay*self.weights
                 self.weights -= learn_rate * grad
@@ -119,7 +115,7 @@ class LinearClassifier(object):
             accuracy_val = 0.0
             for x, y in dl_valid:
                 y_pred, class_scores = self.predict(x)
-                accuracy_val += self.evaluate_accuracy(y, y_pred).item()
+                accuracy_val += self.evaluate_accuracy(y, y_pred)
                 cumulative_loss_val += loss_fn(x, y, class_scores, y_pred) + (0.5 * weight_decay * torch.sum(self.weights ** 2))
 
             valid_res.accuracy.append(accuracy_val / len(dl_valid))
@@ -145,7 +141,7 @@ class LinearClassifier(object):
 
         # ====== YOUR CODE: ======
         if has_bias:
-            w= self.weights[1:, :]  # Exclude the bias term
+            w = self.weights[1:, :]  # Exclude the bias term
         else:
             w = self.weights
 

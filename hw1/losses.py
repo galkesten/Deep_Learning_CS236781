@@ -54,8 +54,10 @@ class SVMHingeLoss(ClassifierLoss):
         # ====== YOUR CODE: ======
         correct_classes_scores = torch.gather(x_scores, 1, y.view(-1, 1))
         M = self.delta + (x_scores - correct_classes_scores)
-        M = torch.clamp(M, min=0.0) #zero out negative losses (like applying max)
-        loss_per_sample = torch.sum(M, 1)-self.delta #we need to substruct delta from each row because we dont want to punish for the true label score
+        # zero out negative losses (like applying max)
+        M = torch.clamp(M, min=0.0)
+        #subtract delta from each row to ensure that the true class score does not contribute to the penalty
+        loss_per_sample = torch.sum(M, 1)-self.delta
         loss = torch.mean(loss_per_sample)
         # ========================
 
@@ -72,7 +74,6 @@ class SVMHingeLoss(ClassifierLoss):
         """
         Calculates the gradient of the Hinge-loss w.r.t. parameters.
         :return: The gradient, of shape (D, C).
-
         """
         # TODO:
         #  Implement SVM loss gradient calculation
@@ -87,9 +88,8 @@ class SVMHingeLoss(ClassifierLoss):
         N = x.shape[0]
 
         G = (M > 0).float()
-        G[torch.arange(N), y] = -1 * (torch.sum(G, dim=1) - G[torch.arange(N), y]) # we want to count number of 1's i each row except of the correct class cell
+        # we want to count number of 1's i each row except of the correct class cell
+        G[torch.arange(N), y] = -1 * (torch.sum(G, dim=1) - G[torch.arange(N), y])
         grad = x.T @ G / N
-
         # ========================
-
         return grad
