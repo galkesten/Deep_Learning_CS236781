@@ -50,7 +50,7 @@ class LinearRegressor(BaseEstimator, RegressorMixin):
         #  Use only numpy functions. Don't forget regularization!
 
         w_opt = None
-        #w_opt = (X^TX/N +lambda *I )^-1 + (x^Ty/N)
+        # w_opt = (X^TX/N +lambda *I )^-1 * (x^Ty/N)
         # ====== YOUR CODE: ======
         N = X.shape[0]
         M = X.shape[1]
@@ -246,6 +246,7 @@ def cv_best_hyperparams(
     #    and their names. The parameters dict you return should use the same
     #    names as keys.
     #  - You can use MSE or R^2 as a score.
+
     # ====== YOUR CODE: ======
     params_dict = {'linearregressor__reg_lambda': lambda_range, 'bostonfeaturestransformer__degree': degree_range}
     grid_search = sklearn.model_selection.GridSearchCV(model, params_dict, cv=k_folds, scoring='neg_mean_squared_error')
