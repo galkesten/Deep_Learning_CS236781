@@ -246,11 +246,9 @@ def cv_best_hyperparams(
     #    and their names. The parameters dict you return should use the same
     #    names as keys.
     #  - You can use MSE or R^2 as a score.
-
     # ====== YOUR CODE: ======
     params_dict = {'linearregressor__reg_lambda': lambda_range, 'bostonfeaturestransformer__degree': degree_range}
-    scoring = sklearn.metrics.make_scorer(mse_score, greater_is_better=False)
-    grid_search = sklearn.model_selection.GridSearchCV(model, params_dict, cv=k_folds, scoring=scoring)
+    grid_search = sklearn.model_selection.GridSearchCV(model, params_dict, cv=k_folds, scoring='neg_mean_squared_error')
     grid_search.fit(X, y)
     # ========================
     best_params = grid_search.best_params_
