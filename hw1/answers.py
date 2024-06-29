@@ -73,11 +73,14 @@ and the scores for incorrect classifications, thus potentially driving larger va
 
 $\lambda$ , the regularization parameter, also affects the scale of the weight vectors but does so by penalizing their magnitude directly.
 As $\lambda$ increases, the penalty for larger weight magnitudes becomes more substantial.
-Therefore, adjustments to $\Delta$ and $\lambda$ have interrelated effects. Increasing $\lambda$ while decreasing $\lambda$
+Therefore, adjustments to $\Delta$ and $\lambda$ have interrelated effects. Increasing $\Delta$ while decreasing $\lambda$
 would potentially lead to an optimal set of weights W that are similar in nature but different in scale.
 
-if we scale $\Delta$ to $\alpha \Delta$ and $\lambda$ to $\frac{\lambda}{\alpha}$ for $\alpha > 0$,  the direction of
- the optimal solution to the problem will stay the same.
+We claim that given specific set of $\lambda$, $\Delta$ and optimal $W^*$ , if we scale $\Delta$ to $\alpha \Delta$ and $\lambda$ to $\frac{\lambda}{\alpha}$ for $\alpha > 0$,  
+the optimal solution of the new problem will be a scaled version of $W^*$.
+ (scaling the optimal solution $W^*$ won't change the predictions of the model).
+
+
 **Proof:**
 Let's say $\mathbf{W}^*$ is an optimal solution for a problem with $\Delta > 0$ and $\lambda > 0$:
 $$
