@@ -252,7 +252,8 @@ class Linear(Layer):
 
         # TODO: Compute the affine transform
         # ====== YOUR CODE: ======
-        out = x @ self.w.T + self.b
+        # out = x @ self.w.T + self.b
+        out = torch.matmul(x, self.w.transpose(0, 1)) + self.b
         # ========================
 
         self.grad_cache["x"] = x
@@ -271,9 +272,10 @@ class Linear(Layer):
         #   - db, the gradient of the loss with respect to b
         #  Note: You should ACCUMULATE gradients in dw and db.
         # ====== YOUR CODE: ======
-        dx = dout @ self.w
-        self.dw += torch.matmul(dout.t(), x)  # TODO
-        self.db +=  torch.sum(dout, dim=0) # TODO
+        dx = torch.matmul(dout, self.w)
+        self.dw += torch.matmul(dout.transpose(0, 1), x)
+        # dl/db = I * dout
+        self.db += torch.sum(dout, dim=0)
         # ========================
 
         return dx
@@ -337,10 +339,12 @@ class CrossEntropyLoss(Layer):
 
         # TODO: Calculate the gradient w.r.t. the input x.
         # ====== YOUR CODE: ======
+        # the input to this layer is class scores x
+        # so instead calculate the gradient of l(y,y^) = -y^T*log(y^) with respect to y^
+        # we calculate the gradient of l(y,softmax(x)) = -y^T*log(softmax(x)) with respect to x
+
         # softmax(z) = e^z /sum(e^z)
-        #softmax_x = torch.exp(x) / torch.sum(torch.exp(x), dim=1, keepdim=True)
-        #dx = dout * softmax_x
-        # TODO
+        # softmax_x = torch.exp(x) / torch.sum(torch.exp(x), dim=1, keepdim=True)
         dx = torch.exp(x) / torch.sum(torch.exp(x), dim=1, keepdim=True)
         dx[torch.arange(N), y] -= 1
         dx *= dout / N

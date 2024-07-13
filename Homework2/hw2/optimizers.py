@@ -73,8 +73,9 @@ class VanillaSGD(Optimizer):
             #  update the parameters tensor.
             # ====== YOUR CODE: ======
             # dp is the gradient of p without the regularization term
-            # I assume here that is the gradient of the loss function with respect to p
+            # therefore, we add the gradient of the regularization term to p.
             dp += self.reg * p
+            # update the value of the param based on its gradient.
             p -= self.learn_rate * dp
             # ========================
 
@@ -94,11 +95,12 @@ class MomentumSGD(Optimizer):
 
         # TODO: Add your own initializations as needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # dict of parameters i : v_p)
+        self.prev_v = {i: 0 for i in range(len(self.params))}
         # ========================
 
     def step(self):
-        for p, dp in self.params:
+        for i, (p, dp) in enumerate(self.params):
             if dp is None:
                 continue
 
@@ -106,7 +108,11 @@ class MomentumSGD(Optimizer):
             # update the parameters tensor based on the velocity. Don't forget
             # to include the regularization term.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            dp += self.reg * p
+            curr_v = self.momentum * self.prev_v[i] - self.learn_rate * dp
+            p += curr_v
+            # update the param.
+            self.prev_v[i] = curr_v
             # ========================
 
 
@@ -127,11 +133,12 @@ class RMSProp(Optimizer):
 
         # TODO: Add your own initializations as needed.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # dict of parameters i : v_r)
+        self.prev_r = {i: 0 for i in range(len(self.params))}
         # ========================
 
     def step(self):
-        for p, dp in self.params:
+        for i, (p, dp) in enumerate(self.params):
             if dp is None:
                 continue
 
@@ -140,5 +147,9 @@ class RMSProp(Optimizer):
             # average of it's previous gradients. Use it to update the
             # parameters tensor.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            dp += self.reg * p
+            curr_r = self.decay * self.prev_r[i] + ( 1 - self.decay) * (dp ** 2)
+            param_update = self.learn_rate / torch.sqrt(curr_r + self.eps)
+            p -= param_update * dp
+            self.prev_r[i] = curr_r
             # ========================

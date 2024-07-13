@@ -10,6 +10,7 @@ math (delimited with $$).
 
 part1_q1 = r"""
 **Your answer:**
+1.
 
 
 Write your answer using **markdown** and $\LaTeX$:
@@ -43,32 +44,27 @@ def part2_overfit_hp():
     wstd, lr, reg = 0, 0, 0
     # TODO: Tweak the hyperparameters until you overfit the small dataset.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    # the weights Initialize in linear layer to zero-mean gaussian noise with a standard(wstd)
+    wstd = 0.1
+    lr = 0.01
+    reg = 0.0
     # ========================
     return dict(wstd=wstd, lr=lr, reg=reg)
 
 
 def part2_optim_hp():
-    wstd, lr_vanilla, lr_momentum, lr_rmsprop, reg, = (
-        0,
-        0,
-        0,
-        0,
-        0,
-    )
+    wstd, lr_vanilla, lr_momentum, lr_rmsprop, reg, = (0, 0, 0, 0, 0,)
 
     # TODO: Tweak the hyperparameters to get the best results you can.
     # You may want to use different learning rates for each optimizer.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    wstd = 0.05
+    lr_vanilla = 0.1
+    lr_momentum = 0.005
+    lr_rmsprop = 0.0001
+    reg = 0.005
     # ========================
-    return dict(
-        wstd=wstd,
-        lr_vanilla=lr_vanilla,
-        lr_momentum=lr_momentum,
-        lr_rmsprop=lr_rmsprop,
-        reg=reg,
-    )
+    return dict(wstd=wstd, lr_vanilla=lr_vanilla, lr_momentum=lr_momentum, lr_rmsprop=lr_rmsprop, reg=reg,)
 
 
 def part2_dropout_hp():
