@@ -365,13 +365,23 @@ class Dropout(Layer):
         super().__init__()
         assert 0.0 <= p < 1.0
         self.p = p
+        self.mask = None
 
     def forward(self, x, **kw):
         # TODO: Implement the dropout forward pass.
         #  Notice that contrary to previous layers, this layer behaves
         #  differently a according to the current training_mode (train/test).
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.training_mode:
+            # prob_tensor is a tensor where each element specifies the probability
+            # of the corresponding element in the output tensor being 1 using Bernoulli distribution
+            prob_tensor = torch.full(x.shape, 1 - self.p)
+            # the dropout mask
+            self.mask = torch.bernoulli(prob_tensor)
+            out = x * self.mask
+        else:
+            # scale the test-time activations by (1-p)
+            out = x * (1 - self.p)
         # ========================
 
         return out
@@ -379,9 +389,11 @@ class Dropout(Layer):
     def backward(self, dout):
         # TODO: Implement the dropout backward pass.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.training_mode:
+            dx = dout * self.mask
+        else:
+            dx = dout * (1 - self.p)
         # ========================
-
         return dx
 
     def params(self):
@@ -503,6 +515,8 @@ class MLP(Layer):
             curr_out_features = hidden_features
             layers.append(Linear(curr_in_features, curr_out_features))
             layers.append(activation_layer())
+            if dropout > 0:
+                layers.append(Dropout(dropout))
             curr_in_features = hidden_features
 
         layers.append(Linear(curr_in_features, num_classes))

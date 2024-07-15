@@ -8,7 +8,6 @@ from .mlp import MLP, ACTIVATIONS, ACTIVATION_DEFAULT_KWARGS
 
 POOLINGS = {"avg": nn.AvgPool2d, "max": nn.MaxPool2d}
 
-
 class CNN(nn.Module):
     """
     A simple convolutional neural network model based on PyTorch nn.Modules.
@@ -19,17 +18,17 @@ class CNN(nn.Module):
     """
 
     def __init__(
-        self,
-        in_size,
-        out_classes: int,
-        channels: Sequence[int],
-        pool_every: int,
-        hidden_dims: Sequence[int],
-        conv_params: dict = {},
-        activation_type: str = "relu",
-        activation_params: dict = {},
-        pooling_type: str = "max",
-        pooling_params: dict = {},
+            self,
+            in_size,
+            out_classes: int,
+            channels: Sequence[int],
+            pool_every: int,
+            hidden_dims: Sequence[int],
+            conv_params: dict = {},
+            activation_type: str = "relu",
+            activation_params: dict = {},
+            pooling_type: str = "max",
+            pooling_params: dict = {},
     ):
         """
         :param in_size: Size of input images, e.g. (C,H,W).
@@ -80,8 +79,34 @@ class CNN(nn.Module):
         #  Note: If N is not divisible by P, then N mod P additional
         #  CONV->ACTs should exist at the end, without a POOL after them.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # get the values with default if not present or empty
+        # for conv layer
+        padding = self.conv_params.get('padding', 0)
+        kernel_size = self.conv_params.get('kernel_size', 1)
+        stride = self.conv_params.get('stride', 0)
 
+        # for activation layer
+        # ACTIVATIONS = {"relu": nn.ReLU, "lrelu": nn.LeakyReLU}
+        activation_func_param = self.activation_params.get('negative_slope', None)
+
+        # for pooling layer
+        # POOLINGS = {"avg": nn.AvgPool2d, "max": nn.MaxPool2d}
+        pooling_kernel_size = self.pooling_params.get('kernel_size', 1)
+        layer_counter = 0
+        conv_layer = []
+        for channel in self.channels:
+            conv_layer += nn.Conv2d(in_channels=in_channels, out_channels=channel,
+                                    padding=padding, kernel_size=kernel_size, stride=stride)
+            conv_layer += ACTIVATIONS[self.activation_type](activation_func_param)
+            in_channels = channel
+            layer_counter += 1
+
+            if layer_counter % self.pool_every == 0:
+                layers += POOLINGS[self.pooling_type](kernel_size=pooling_kernel_size)
+                conv_layer = []
+        # If N is not divisible by P, then N mod P additional
+        # CONV->ACTs should exist at the end, without a POOL after them
+        layers += conv_layer
         # ========================
         seq = nn.Sequential(*layers)
         return seq
@@ -109,7 +134,7 @@ class CNN(nn.Module):
         #  - The last Linear layer should have an output dim of out_classes.
         mlp: MLP = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+
         # ========================
         return mlp
 
@@ -130,15 +155,15 @@ class ResidualBlock(nn.Module):
     """
 
     def __init__(
-        self,
-        in_channels: int,
-        channels: Sequence[int],
-        kernel_sizes: Sequence[int],
-        batchnorm: bool = False,
-        dropout: float = 0.0,
-        activation_type: str = "relu",
-        activation_params: dict = {},
-        **kwargs,
+            self,
+            in_channels: int,
+            channels: Sequence[int],
+            kernel_sizes: Sequence[int],
+            batchnorm: bool = False,
+            dropout: float = 0.0,
+            activation_type: str = "relu",
+            activation_params: dict = {},
+            **kwargs,
     ):
         """
         :param in_channels: Number of input channels to the first convolution.
@@ -198,11 +223,11 @@ class ResidualBottleneckBlock(ResidualBlock):
     """
 
     def __init__(
-        self,
-        in_out_channels: int,
-        inner_channels: Sequence[int],
-        inner_kernel_sizes: Sequence[int],
-        **kwargs,
+            self,
+            in_out_channels: int,
+            inner_channels: Sequence[int],
+            inner_kernel_sizes: Sequence[int],
+            **kwargs,
     ):
         """
         :param in_out_channels: Number of input and output channels of the block.
@@ -234,16 +259,16 @@ class ResidualBottleneckBlock(ResidualBlock):
 
 class ResNet(CNN):
     def __init__(
-        self,
-        in_size,
-        out_classes,
-        channels,
-        pool_every,
-        hidden_dims,
-        batchnorm=False,
-        dropout=0.0,
-        bottleneck: bool = False,
-        **kwargs,
+            self,
+            in_size,
+            out_classes,
+            channels,
+            pool_every,
+            hidden_dims,
+            batchnorm=False,
+            dropout=0.0,
+            bottleneck: bool = False,
+            **kwargs,
     ):
         """
         See arguments of CNN & ResidualBlock.
@@ -281,4 +306,3 @@ class ResNet(CNN):
         # ========================
         seq = nn.Sequential(*layers)
         return seq
-
