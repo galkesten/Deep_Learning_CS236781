@@ -12,14 +12,89 @@ part1_q1 = r"""
 **Your answer:**
 1.
 
-A. The shape of $W$ is (1024,512), the shape of $X$ is (64, 1024) and the shape of the output $Y$ is (64,512).
-The Jacobian tensor $\frac{\partial Y}{\partial X}$ captures how each element of $Y$ changes with respect to each element of $X$
-therefore ths shape is (64, 512, 64, 1024).
+A. Since the Linear layer function is $XW^T+b =Z$  and the shape of $X$ is (64, 1024), We get that the shape of $W$
+(512, 1024) and the shape of the output $Y$ is (64,512).
+The Jacobian tensor $\frac{\partial Y}{\partial X}$ captures how each element of $Y$ changes with respect to each element of $X$.
+Therefore the shape is (64, 512, 64, 1024).
 
-B. For a given input $x_i$ the output $y_i$ is $y_i = Wx_i+b$ and the $\frac{\partial y_i}{\partial x_i} = W,
- $y_i$ is depend only on $x_i$ therefor $j\notequal i$ $y_i$ equal to zero, the result of it is the $\frac{\partial y_i}{\partial x} is sparsiy and just the diangonal with non zero.
- 
- 
+B. We have that $Y_{ij}= \Sigma_{k=1}^{1024} =X_{ik}W^T_{kj} = X_{ik}W_{jk}$. 
+
+Thus, $$\frac{\partial Y_{ij}}{\partial{X_{tl}}} = 
+ \begin{cases} 
+    W_{j l} & \text{if } t=i \\
+    0 & \text{else}
+\end{cases}
+ $$
+The Jacobian is a 4d Tensor such that $J[i, j] =\frac{\partial Y_{ij} }{\partial{X}}$ 
+where $\frac{\partial Y_{ij}}{\partial{X}} \in M^{64, 1024}$. For each $\frac{\partial Y_{ij}}{\partial{X}}$ only the 
+i-th row has non-zero elements, meaning only 1024 elements might be non-zero. This occurs for each of the 64*512 matrices
+(for each $Y_{ij}$). 
+
+Therefore, in every such matrix, only one row is non-zero, making the Jacobian tensor indeed sparse.
+
+C. No, we can compute the partial gradient w.r.t L without calculating the jacobian tensor. 
+$$
+\frac{\partial L}{\partial{X}} = \Sigma_{i, j}{\frac{\partial L}{\partial{Y_{ij}}} \cdot \frac{\partial 
+Y_{ij}}{\partial{X}} } = $$
+$$
+\Sigma_{i, j}{\frac{\partial L}{\partial{Y_{ij}}}}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+W_{j1} & W_{j2} & \cdots & W_{jk} & \cdots & W_{j1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+=
+\Sigma_{i, j}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+$$
+
+$$
+=
+\Sigma_{i=1}^{64} \Sigma_{j=1}^{512}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+$$
+$$
+=
+\Sigma_{i=1}^{64}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+$$
+$$
+=
+\begin{pmatrix}
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{1j}}} W_{j1024} \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{2ij}}} W_{j1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{64j}}} W_{j1024} \\
+\end{pmatrix}
+= 
+\frac{\partial L}{\partial{Y}} \cdot W
+$$
 """
 
 part1_q2 = r"""

@@ -88,7 +88,6 @@ class LeakyReLU(Layer):
         self.grad_cache["x"] = x
         return out
 
-
     def backward(self, dout):
         """
         :param dout: Gradient with respect to layer output, shape (N, *).
@@ -100,7 +99,19 @@ class LeakyReLU(Layer):
         # ====== YOUR CODE: ======
         # dout * gradient of max(alpha*x,x), that is, dout * alpha, where x <= 0 else dout.
         # x that we saved in the cache in the forward pass
-        dx = dout.clone()
+        dx = dout.clone() # dout is a matrix of N functions, each function is vectoric f(x1, ....xm)
+        """ Since our x is also a matrix shape (N,m) where each row is a "sample", gradient of L which is a scalar function
+         w.r.t each sample should b size *, and overall we should plot also one matrix size(N,m) where each row is 
+         gradient of L w.r.t the sample.
+         However, Our function it self LeakyRelU, gets a matrix and output a matrix. So, we have  N* m outputs and we 
+         need to differntiate each element in the output w.r.t all input. This creats us a cube of (Nm,N,m) that 
+         the Jacobian. Each element of the output (out)ij depends only on the input (in)ij we wil get a cube with one 
+         element on each matrix. And by the chain rule we need to sum (jacoby matrix ij of df/dinput * (dL/df)ij)
+         so if we think about it all we are left with is a element wise multiplication between the dout gradients
+         and the gradients of the current function which we can represent as one matrix where we derive leakyRelu
+         in 1d. The derivative of leakyRelU is - alpha if the input < 0 else 1. so its enough just to take the matrix
+         of dout and         
+         """
         dx[x <= 0] *= self.alpha
         # ========================
         return dx
@@ -187,8 +198,8 @@ class TanH(Layer):
         # TODO: Implement the tanh function.
         #  Save whatever you need into grad_cache.
         # ====== YOUR CODE: ======
-        # out = (torch.exp(x) - torch.exp(-x)) / (torch.exp(x) + torch.exp(-x))
-        out = torch.tanh(x)
+        out = (torch.exp(x) - torch.exp(-x)) / (torch.exp(x) + torch.exp(-x))
+        #out = torch.tanh(x)
         self.grad_cache["tanh_out"] = out
         # ========================
 
