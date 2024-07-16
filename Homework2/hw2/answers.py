@@ -116,14 +116,37 @@ A high dropout rate may excessively eliminate neurons, impairing the model's cap
 
 part2_q2 = r"""
 **Your answer:**
+Yes, it is possible for the test loss to increase for a few epochs while the test accuracy also increases. 
+This can occur because test accuracy only measures the proportion of correct predictions, 
+while cross-entropy loss accounts for the confidence of those predictions.
+ If the model starts making correct predictions with lower confidence or incorrect predictions with higher confidence, 
+ the accuracy can improve even as the loss increases.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+We can observe this phenomenon in our graph. For example, with dropout=0.4, it occurs between iterations 6-7,
+ and with dropout=0, it occurs at iteration 10. Although these specific instances may vary in future runs, 
+ this example demonstrates that it can indeed happen.
+ 
+**example :** 
+Consider a binary classification problem where the true labels are 0 and 1.
+
+*Epoch 1:*
+
+Predictions for 4 samples: $\hat{y}$= [0.4,0.8,0.6,0.3] , True labels: [0,1,1,0]
+
+Cross-Entropy Loss Calculation: $L_{CE} = -\frac{1}{4}(log(0.6)+log(0.8)+log(0.6)+log(0.7))≈0.437$
+
+Accuracy:  $3/4$
+
+*Epoch 2:*
+
+Predictions for 4 samples: $\hat{y}$= [0.45,0.9,0.55,0.4], True labels: [0,1,1,0]
+
+Cross-Entropy Loss Calculation: $L_{CE} = -\frac{1}{4}(log(0.55)+log(0.9)+log(0.55)+log(0.6))≈0.479$
+
+Accuracy: $4/4$
+
+This demonstrates how the test loss can increase while the test accuracy also increases.
 
 """
 
