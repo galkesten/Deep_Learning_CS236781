@@ -271,7 +271,19 @@ class ClassifierTrainer(Trainer):
         #  - Update parameters
         #  - Classify and calculate number of correct predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # Forward pass
+        y_pred = self.model.forward(X)
+        loss = self.loss_fn(y_pred, y)
+        # Backward pass
+        self.optimizer.zero_grad()
+        loss.backward()
+        # Update parameters
+        self.optimizer.step()
+
+        # calculate number of correct predictions
+        predicted_classes = torch.argmax(y_pred, dim=1)
+        num_correct = (predicted_classes == y).sum().item()
+        batch_loss = float(loss)
         # ========================
 
         return BatchResult(batch_loss, num_correct)
@@ -291,7 +303,11 @@ class ClassifierTrainer(Trainer):
             #  - Forward pass
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            y_pred = self.model.forward(X)
+            loss = self.loss_fn(y_pred, y)
+            predicted_classes = torch.argmax(y_pred, dim=1)
+            num_correct = (predicted_classes == y).sum().item()
+            batch_loss = float(loss)
             # ========================
 
         return BatchResult(batch_loss, num_correct)
@@ -325,7 +341,7 @@ class LayerTrainer(Trainer):
         y_pred = self.model.forward(X.view(X.shape[0], -1))
 
         # calculate loss
-        loss = self.loss_fn(y_pred, y)
+        loss = self.loss_fn(y_pred, y).float()
 
         # zero gradients of all parameters
         self.optimizer.zero_grad()
@@ -342,7 +358,7 @@ class LayerTrainer(Trainer):
         # ========================
         # loss: float
         # num_correct: int
-        return BatchResult(loss.float(), num_correct)
+        return BatchResult(loss, num_correct)
 
     def test_batch(self, batch) -> BatchResult:
         X, y = batch
