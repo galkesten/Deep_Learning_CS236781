@@ -8,6 +8,7 @@ from .mlp import MLP, ACTIVATIONS, ACTIVATION_DEFAULT_KWARGS
 
 POOLINGS = {"avg": nn.AvgPool2d, "max": nn.MaxPool2d}
 
+
 class CNN(nn.Module):
     """
     A simple convolutional neural network model based on PyTorch nn.Modules.
@@ -33,10 +34,10 @@ class CNN(nn.Module):
         """
         :param in_size: Size of input images, e.g. (C,H,W).
         :param out_classes: Number of classes to output in the final layer.
-        :param channels: A list of of length N containing the number of
+        :param channels: A list  of length N containing the number of
             (output) channels in each conv layer.
         :param pool_every: P, the number of conv layers before each max-pool.
-        :param hidden_dims: List of of length M containing hidden dimensions of
+        :param hidden_dims: List  of length M containing hidden dimensions of
             each Linear layer (not including the output layer).
         :param conv_params: Parameters for convolution layers.
         :param activation_type: Type of activation function; supports either 'relu' or
@@ -82,8 +83,8 @@ class CNN(nn.Module):
         # get the values with default if not present or empty
         # for conv layer
         padding = self.conv_params.get('padding', 0)
-        kernel_size = self.conv_params.get('kernel_size', 1)
-        stride = self.conv_params.get('stride', 0)
+        kernel_size = self.conv_params.get('kernel_size', 3)
+        stride = self.conv_params.get('stride', 1)
 
         # for activation layer
         # ACTIVATIONS = {"relu": nn.ReLU, "lrelu": nn.LeakyReLU}
@@ -91,36 +92,39 @@ class CNN(nn.Module):
 
         # for pooling layer
         # POOLINGS = {"avg": nn.AvgPool2d, "max": nn.MaxPool2d}
-        pooling_kernel_size = self.pooling_params.get('kernel_size', 1)
+        pooling_kernel_size = self.pooling_params.get('kernel_size', 2)
         layer_counter = 0
-        conv_layer = []
         for channel in self.channels:
-            conv_layer += nn.Conv2d(in_channels=in_channels, out_channels=channel,
-                                    padding=padding, kernel_size=kernel_size, stride=stride)
-            conv_layer += ACTIVATIONS[self.activation_type](activation_func_param)
+            layers.append(nn.Conv2d(in_channels=in_channels, out_channels=channel,
+                                        padding=padding, kernel_size=kernel_size, stride=stride))
+            if self.activation_params:
+                layers.append(ACTIVATIONS[self.activation_type](activation_func_param))
+            else:
+                layers.append(ACTIVATIONS[self.activation_type]())
             in_channels = channel
             layer_counter += 1
 
             if layer_counter % self.pool_every == 0:
-                layers += POOLINGS[self.pooling_type](kernel_size=pooling_kernel_size)
-                conv_layer = []
+                layers.append(POOLINGS[self.pooling_type](kernel_size=pooling_kernel_size))
         # If N is not divisible by P, then N mod P additional
         # CONV->ACTs should exist at the end, without a POOL after them
-        layers += conv_layer
         # ========================
         seq = nn.Sequential(*layers)
         return seq
 
     def _n_features(self) -> int:
         """
-        Calculates the number of extracted features going into the the classifier part.
+        Calculates the number of extracted features going into the classifier part.
         :return: Number of features.
         """
         # Make sure to not mess up the random state.
         rng_state = torch.get_rng_state()
         try:
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            dummy_input = torch.zeros(1, *self.in_size)
+            dummy_output = self.feature_extractor(dummy_input)
+            n_features = dummy_output.numel()
+            return n_features
             # ========================
         finally:
             torch.set_rng_state(rng_state)
@@ -134,7 +138,9 @@ class CNN(nn.Module):
         #  - The last Linear layer should have an output dim of out_classes.
         mlp: MLP = None
         # ====== YOUR CODE: ======
-
+        nonl_params = [ACTIVATIONS[self.activation_type](**self.activation_params) if self.activation_params else ACTIVATIONS[self.activation_type]()]  * len(self.hidden_dims) + ["none"]
+        mlp = MLP(in_dim=self._n_features(), dims=[*self.hidden_dims, self.out_classes],
+                  nonlins=nonl_params)
         # ========================
         return mlp
 
@@ -144,7 +150,12 @@ class CNN(nn.Module):
         #  return class scores.
         out: Tensor = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # conv layer
+        features = self.feature_extractor(x)
+        # flatten
+        features = features.view(features.size(0), -1)
+        #fc layer
+        out = self.mlp(features)  #[batch_size, n_classes=10]
         # ========================
         return out
 
