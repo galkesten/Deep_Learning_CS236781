@@ -77,7 +77,7 @@ $$
 0 & 0 & \cdots & 0 & \cdots & 0 \\
 0 & 0 & \cdots & 0 & \cdots & 0 \\
 \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
-\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots &\Sigma_{j=1}^{512} \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
 \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
 0 & 0 & \cdots & 0 & \cdots & 0 \\
 \end{pmatrix}
@@ -85,37 +85,122 @@ $$
 $$
 =
 \begin{pmatrix}
-\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{1j}}} W_{j1024} \\
-\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{2ij}}} W_{j1024} \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{1j}}} W_{jk} & \cdots &\Sigma_{j=1}^{512} \frac{\partial L}{\partial{Y_{1j}}} W_{j1024} \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2j}}} W_{jk} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{2ij}}} W_{j1024} \\
 \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
-\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{ij}}} W_{jk} & \cdots &\Sigma_{j=1}^{512} \frac{\partial L}{\partial{Y_{ij}}} W_{j1024} \\
 \vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
-\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{jk} & \cdots & \frac{\partial L}{\partial{Y_{64j}}} W_{j1024} \\
+\Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{j1} & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{j2} & \cdots & \Sigma_{j=1}^{512}\frac{\partial L}{\partial{Y_{64j}}} W_{jk} & \cdots &\Sigma_{j=1}^{512} \frac{\partial L}{\partial{Y_{64j}}} W_{j1024} \\
 \end{pmatrix}
 = 
-\frac{\partial L}{\partial{Y}} \cdot W
+\frac{\partial L}{\partial{Y}} \cdot W =\delta\mat{Y}W
 $$
+
+2.
+
+A. Since the Linear layer function is $XW^T+b =Z$  and the shape of $X$ is (64, 1024), We get that the shape of $W$
+is (512, 1024) and the shape of the output $Y$ is (64,512).
+The Jacobian tensor $\frac{\partial Y}{\partial X}$ captures how each element of $Y$ changes with respect to each element of $W$.
+Therefore the shape is (64, 512, 512, 1024).
+
+B. We have that $Y_{ij}= \Sigma_{k=1}^{1024}X_{ik}W^T_{kj} = \Sigma_{k=1}^{1024}X_{ik}W_{jk}$. 
+
+Thus, $$\frac{\partial Y_{ij}}{\partial{W_{tl}}} = 
+ \begin{cases} 
+    X_{i l} & \text{if } t=j \\
+    0 & \text{else}
+\end{cases}
+ $$
+The Jacobian is a 4d Tensor such that $J[i, j] =\frac{\partial Y_{ij} }{\partial{W}}$ 
+where $\frac{\partial Y_{ij}}{\partial{W}} \in M^{512, 1024}$. For each $\frac{\partial Y_{ij}}{\partial{W}}$ only the 
+j-th row has non-zero elements, meaning only 1024 elements might be non-zero. This occurs for each of the 64*512 matrices
+(for each $Y_{ij}$). 
+
+Therefore, in every such matrix, only one row is non-zero, making the Jacobian tensor indeed sparse.
+
+C. No, we can compute the partial gradient w.r.t L without calculating the jacobian tensor. 
+$$
+\frac{\partial L}{\partial{W}} = \Sigma_{i, j}{\frac{\partial L}{\partial{Y_{ij}}} \cdot \frac{\partial 
+Y_{ij}}{\partial{W}} } = $$
+$$
+\Sigma_{i, j}{\frac{\partial L}{\partial{Y_{ij}}}}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+X_{i1} & X_{i2} & \cdots & X_{ik} & \cdots & X_{i1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+=
+\Sigma_{i, j}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\frac{\partial L}{\partial{Y_{ij}}} X_{i1} & \frac{\partial L}{\partial{Y_{ij}}} X_{i2} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} X_{ik} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} X_{i1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+$$
+
+$$
+=
+\Sigma_{j=1}^{512} \Sigma_{i=1}^{64} 
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\frac{\partial L}{\partial{Y_{ij}}} X_{i1} & \frac{\partial L}{\partial{Y_{ij}}} X_{i2} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} X_{ik} & \cdots & \frac{\partial L}{\partial{Y_{ij}}} X_{i1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+$$
+$$
+=
+\Sigma_{j=1}^{512}
+\begin{pmatrix}
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{ij}}} X_{i1} & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{ij}}} X_{i2} & \cdots & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{ij}}} X_{ik} & \cdots & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{ij}}} X_{i1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & 0 & \cdots & 0 \\
+\end{pmatrix}
+$$
+$$
+=
+\begin{pmatrix}
+\Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{i1}}} X_{i1} & \Sigma_{1=1}^{64}\frac{\partial L}{\partial{Y_{i1}}} X_{i2} & \cdots & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{i1}}} X_{ik} & \Sigma_{i=1}^{64}\cdots & \frac{\partial L}{\partial{Y_{i1}}} X_{i1024} \\
+\Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{i2}}} X_{i1} & \Sigma_{1=1}^{64}\frac{\partial L}{\partial{Y_{i2}}} X_{i2} & \cdots & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{i2}}} X_{ik} & \Sigma_{i=1}^{64}\cdots & \frac{\partial L}{\partial{Y_{i2}}} X_{i1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{ik}}} X_{i1} & \Sigma_{1=1}^{64}\frac{\partial L}{\partial{Y_{ik}}} X_{i2} & \cdots & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{ik}}} X_{ik} & \Sigma_{i=1}^{64}\cdots & \frac{\partial L}{\partial{Y_{ik}}} X_{i1024} \\
+\vdots & \vdots & \ddots & \vdots & \ddots & \vdots \\
+\Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{i1024}}} X_{i1} & \Sigma_{1=1}^{64}\frac{\partial L}{\partial{Y_{i1024}}} X_{i2} & \cdots & \Sigma_{i=1}^{64}\frac{\partial L}{\partial{Y_{i1024}}} X_{ik} & \Sigma_{i=1}^{64}\cdots & \frac{\partial L}{\partial{Y_{i1024}}} X_{i1024} \\
+\end{pmatrix}
+= 
+{\frac{\partial L}{\partial{Y}}}^T X = (\delta\mat{Y})^TX
+$$
+
 """
 
 part1_q2 = r"""
 **Your answer:**
-Backpropagation is required to train neural networks using gradient-based optimization methods because it efficiently
- and accurately computes the gradients of the loss function with respect to all the weights in the network.
-by applying the chain rule of calculus, backpropagation propagates the error backward through the network, 
-layer by layer, which allows for effective and scalable training of deep networks. without backpropagation, 
-calculating these gradients would be computationally infeasible and time-consuming for large networks.
+It is theoretically possible to compute gradients without backpropagation. Alternative methods, 
+such as finite differences and forward mode automatic differentiation (AD), can also optimize neural networks. 
+However, these methods are generally much less efficient and practical compared to backpropagation, 
+especially for large networks and when the number of outputs is small.
 
-However, it is theoretically possible to compute gradients without backpropagation. 
-alternative methods, such as finite differences, can also optimize neural networks. 
-these methods, though, are generally much less efficient and practical compared to backpropagation, especially for large networks and complex tasks. 
-Therefore, while not absolutely required, backpropagation is the preferred and most effective method for training neural networks.
+Therefore, while not absolutely required, backpropagation is the preferred method for training neural networks. 
+It efficiently and accurately computes the gradients of the loss function with respect to all the weights in the network. 
+By applying the chain rule of calculus, backpropagation propagates the error backward through the network, layer by layer,
+ allowing for effective and scalable training of deep networks. 
+ Without backpropagation, calculating these gradients would be computationally infeasible and time-consuming for
+  large networks.
 
 (Finite differences is a numerical method to approximate the gradient of the loss function with respect to the weights. 
 It involves perturbing each weight slightly and observing the change in the loss function.)
-
-
 """
-
 # ==============
 # Part 2 (Optimization) answers
 
