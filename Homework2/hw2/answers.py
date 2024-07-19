@@ -224,10 +224,10 @@ def part2_optim_hp():
     # You may want to use different learning rates for each optimizer.
     # ====== YOUR CODE: ======
     wstd = 0.05
-    lr_vanilla = 0.1
-    lr_momentum = 0.005
-    lr_rmsprop = 0.0001
-    reg = 0.005
+    lr_vanilla = 0.04
+    lr_momentum = 0.00418
+    lr_rmsprop = 0.00016
+    reg = 0.002
     # ========================
     return dict(wstd=wstd, lr_vanilla=lr_vanilla, lr_momentum=lr_momentum, lr_rmsprop=lr_rmsprop, reg=reg,)
 
@@ -245,33 +245,30 @@ def part2_dropout_hp():
 
 part2_q1 = r"""
 **Your answer:**
-1.
-Without dropout, the model quickly achieves high training accuracy and low training loss because it can utilize all neurons during training, 
+
+1.Without dropout, the model quickly achieves high training accuracy and low training loss because it can utilize all neurons during training, 
 allowing it to closely fit the training data, which matches our expectations. However, during testing, the loss is significantly higher and accuracy is lower,
- as expected, because the model overfits to the training data by relying heavily on all neurons, resulting in poor generalization to new data.
- 
+as expected, because the model overfits to the training data by relying heavily on all neurons, resulting in poor generalization to new data.
+
 With dropout, the training loss is higher and the training accuracy is lower compared to without dropout. 
 However, the test loss is significantly lower and the test accuracy improves slightly, as expected. 
 This is because dropout disables a fraction of neurons during training, making it harder for the model to rely on specific neurons. 
 This helps address overfitting by forcing the model to generalize better and not depend too heavily on particular neurons and weights.
 
 
-2.
-If the dropout rate is too high, it can be problematic because the model will rely on too few neurons each time, 
-making it difficult for the model to learn effectively. This can lead to poor performance as we see in the graphs.
-We observe that during training, the model underfits the data as indicated by the relatively high loss and low accuracy. 
-This underfitting persists during testing, where the loss remains high and the accuracy is low, 
-suggesting that the model fails to fit the training data properly and does not generalize well.
+2.The graphs show that using a dropout rate of 0.4 led to better results in terms of both loss and test accuracy during
+ training and testing compared to using a higher dropout rate.
 
-Dropout is a useful technique to improve the generalization of deep models, as we see. 
-However, it is important to balance the dropout rate to ensure that the model can still learn effectively.
+During training with a high dropout rate, the model underfits the data, which is indicated by relatively high loss and 
+low accuracy. This underfitting continues during testing, where the loss remains high and accuracy is low, 
+suggesting the model struggles to fit the training data properly and doesn't generalize well, even though it performs slightly better during testing than with no dropout at all.
 
+The reason for this is that a too-high dropout rate can be problematic because the model relies on too few neurons 
+each time, making it difficult for effective learning. This decreases the model's capacity and prevents it from
+learning complex patterns, leading to the poor performance observed in the graphs.
 
-2.
-A high dropout rate may excessively eliminate neurons, impairing the model's capacity to assimilate crucial information from the data.
- This excessive neuron dropout can result in underfitting, 
- where the model is unable to detect essential patterns and exhibits inadequate performance.
-
+Therefore, we conclude that dropout is a useful technique to improve the generalization of deep models. 
+However, it's important to balance the dropout rate to ensure the model can still learn effectively.
 """
 
 part2_q2 = r"""
@@ -284,7 +281,7 @@ while cross-entropy loss accounts for the confidence of those predictions.
 
 
 We can observe this phenomenon in our graph. For example, with dropout=0.4, it occurs between iterations 6-7,
- and with dropout=0, it occurs at iteration 10. Although these specific instances may vary in future runs, 
+ and with dropout=0, it occurs at iteration 15. Although these specific instances may vary in future runs, 
  this example demonstrates that it can indeed happen.
  
 **example :** 
@@ -314,12 +311,109 @@ part2_q3 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+1. **Gradient Descent**: An optimization technique that aims to minimize a loss function by
+iteratively adjusting the model's parameters. It works by moving in the direction of the steepest descent 
+to find a local minimum.
+
+    **Back-Propagation**: A method for efficiently computing the gradients of the loss function with 
+    respect to the model's parameters. The algorithm is based on the chain rule from calculus.
+    Back-propagation is typically used in optimization algorithms that require gradients.
+
+2. Gradient Descent (GD) and Stochastic Gradient Descent (SGD) are both optimization techniques used to minimize 
+loss functions by updating model parameters iteratively. 
+In GD, the update rule involves computing the gradient of the loss function with respect to all training data. 
+In contrast, SGD updates the model parameters using the gradient computed from a single randomly selected training example
+at each iteration. The expectation of the noisy gradient updates in SGD is equal to the true gradient in GD,
+allowing SGD to approximate the true gradient direction over many iterations. 
+GD usually has smoother convergence compared to regular SGD, 
+which can be noisy due to the variability introduced by random sampling. 
+
+3. Stochastic Gradient Descent (SGD) is widely used in deep learning for several reasons:
+
+    -Gradient Descent (GD) has significant memory and computation demands 
+    since it requires processing the entire dataset for a single optimization step. 
+    This makes it impractical for large datasets.
+    
+    -In Stochastic Gradient Descent (SGD), the error surface is dynamic, 
+    changing with each batch of training samples. This variability can enhance 
+    optimization by helping the optimizer escape flat regions or sharp local minima, 
+    as these problematic features may be smoothed out in the loss surface of subsequent batches.
+    
+    -SGD introduces noise due to its random sampling, 
+    which acts as a form of regularization. This noise can prevent the optimizer from converging to a minimum that 
+    perfectly matches the training data, thereby reducing the risk of overfitting and improving 
+    generalization to unseen data.
+    
+4.
+4.A. 
+The methods have the same loss output after going through entire dataset:
+Mathematical Justification"
+
+Let the dataset be $\mathcal{S}$ with size $N$. 
+
+Split $\mathcal{S}$ into $M$ disjoint batches $\{\mathcal{B}_1, \mathcal{B}_2, \ldots, \mathcal{B}_M\}$ where 
+each batch $\mathcal{B}_j$ contains $N_j$ samples such that $\sum_{j=1}^{M} N_j = N$.
+
+The total loss over the entire dataset is:
+
+$$
+L(\theta) = \sum_{i=1}^{N} \ell(f_\theta(x_i), y_i)
+$$
+
+When split into batches, the total loss can be written as the sum of losses for each batch:
+
+$$
+L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i)
+$$
+
+Since all the batches are disjoint sets, where their union is equal to entire S 
+we can deduce that  $L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i) =
+\sum_{j=1}^{N} l(f_\theta(x_i), y_i) = L(\theta)$. 
+
+If the losses are equivalent, then theoretically we should get the same gradient updates when 
+calculating the gradient with respect to the network parameters. 
+The problem is that we also need to accumulate outputs if we use the chain rule, as we will explain in the next section.
+
+4.B.
+4.A.
+
+The methods have the same loss output after going through the entire dataset:
+
+Let the dataset be $\mathcal{S}$ with size $N$. Split $\mathcal{S}$ into $M$ disjoint batches $\{\mathcal{B}_1, \mathcal{B}_2, \ldots, \mathcal{B}_M\}$ where each batch $\mathcal{B}_j$ contains $N_j$ samples such that $\sum_{j=1}^{M} N_j = N$.
+
+The total loss over the entire dataset is:
+
+$$
+L(\theta) = \sum_{i=1}^{N} \ell(f_\theta(x_i), y_i)
+$$
+
+When split into batches, the total loss can be written as the sum of losses for each batch:
+
+$$
+L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i)
+$$
+
+Since all the batches are disjoint sets whose union is equal to the entire dataset $\mathcal{S}$, we can deduce that:
+
+$$
+L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i) = \sum_{i=1}^{N} \ell(f_\theta(x_i), y_i) = L(\theta)
+$$
+
+If the losses are equivalent, then theoretically we should get the same gradient updates when calculating the gradient
+with respect to the network parameters. 
+The problem is that we also need to accumulate outputs if we use the chain rule, as we will explain in the next section.
+
+4.B.
+
+Even though we are using batch sizes small enough to fit into memory, an out of memory error can occur because 
+when we accumulate the losses from multiple forward passes, the computation graphs for each batch are also accumulated. 
+This means memory usage grows with each batch processed until it exceeds the available memory.
+
+We cannot clear the outputs because we are using the backpropagation algorithm, which requires the computational graph 
+along the way. This method treats the data as if it was actually calculated together in a single forward pass, 
+therefore requiring all outputs for gradient calculations. To compute the gradients correctly using the chain rule, 
+we need to retain the entire computation graph until the backward pass is complete.
+
 
 """
 
@@ -343,63 +437,73 @@ An equation: $e^{i\pi} -1 = 0$
 # Part 3 (MLP) answers
 
 
-def part3_arch_hp():
-    n_layers = 0  # number of layers (not including output)
-    hidden_dims = 0  # number of output dimensions for each hidden layer
-    activation = "none"  # activation function to apply after each hidden layer
-    out_activation = "none"  # activation function to apply at the output layer
-    # TODO: Tweak the MLP architecture hyperparameters.
-    # ====== YOUR CODE: ======
-    raise NotImplementedError()
-    # ========================
-    return dict(
-        n_layers=n_layers,
-        hidden_dims=hidden_dims,
-        activation=activation,
-        out_activation=out_activation,
-    )
-
-
-def part3_optim_hp():
-    import torch.nn
-    import torch.nn.functional
-
-    loss_fn = None  # One of the torch.nn losses
-    lr, weight_decay, momentum = 0, 0, 0  # Arguments for SGD optimizer
-    # TODO:
-    #  - Tweak the Optimizer hyperparameters.
-    #  - Choose the appropriate loss function for your architecture.
-    #    What you returns needs to be a callable, so either an instance of one of the
-    #    Loss classes in torch.nn or one of the loss functions from torch.nn.functional.
-    # ====== YOUR CODE: ======
-    raise NotImplementedError()
-    # ========================
-    return dict(lr=lr, weight_decay=weight_decay, momentum=momentum, loss_fn=loss_fn)
-
-
 part3_q1 = r"""
 **Your answer:**
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+**High  Optimization error:**
+
+High Optimization error occurs when the training process fails to sufficiently minimize the loss function on the training data.
+Neural networks often have highly non-convex loss surfaces, making it challenging to find the global optimum.
+Issues such as vanishing gradients, varying rates of convergence in different dimensions, 
+and dependency on initialization can contribute to high optimization error.
+
+Solutions proposed during course:
+- Advanced Optimizers: Utilize optimization algorithms such as SGD with Momentum, Adam, or RMSprop to enhance convergence rates and stability.
+- Learning Rate Scheduling: Reduce the learning rate every few epoches
+- Warmups: Gradually increase the learning rate at the start of training to stabilize initial updates.
+- Proper Weight Initialization: Use advanced initialization methods like Xavier initialization
+ to set effective starting points for the weights.
+- Preprocessing Data: Normalize and preprocess data to ensure consistent gradient behavior across different axes. 
+    We can also use batch normalization techniques to learn how to best normalize the data.
+- Skip Connections: Introduce skip connections (e.g., as in ResNet) to mitigate vanishing gradients.
+
+**High Generalization Error:**
+
+High Generalization error arises when the model performs well on the training data but poorly on unseen data. 
+This indicates overfitting to the training data.
+This happens because we train on empirical loss instead of population loss. 
+
+Solutions proposed during course:
+- More Data: Gather more data or data that better represents the underlying distribution D
+- Cross-Validation: Use cross-validation to find hyperparameters that that will not cause overfitting/underfitting.
+- Regularization: Apply L1 or L2 regularization to penalize large weights.
+- Early Stopping: Stop training when the validation loss starts to increase to prevent overfitting
+- Mini-Batches: Use mini-batches during training to introduce some noise and prevent overfitting.
+- Data Augmentation: Increase the diversity of the training data through techniques like rotation, flipping, and scaling.
+- Adding Noise: Introduce noise to inputs or weights during training to regularize the model.
+- Label Smoothing: Adjust labels slightly to make the model less confident and more generalizable.
+- Dropout: Randomly deactivate neurons during training to prevent overfitting.
+- Ensembles: Combine multiple models to improve robustness and generalization.
+
+**High approximation Error:**
+
+Approximation error occurs when the chosen hypothesis class H is not expressive enough to capture
+the underlying patterns in the data. 
+
+Solutions proposed during course:
+
+- More Expressive Hypothesis Class: Use a more powerful hypothesis class, such as deep neural networks (DNNs)
+- Increase Parameters: Add more layers and neurons to the network to enhance its capacity.
+- Tailor the model to the specific domain, such as using convolutional neural networks (CNNs).
+- Receptive Field Adjustments: In CNNs, increasing the receptive field as we go deeper in the network allows each layer
+to capture features at different levels of abstraction, reducing approximation error by enabling
+the model to learn more complex patterns.
 
 """
 
 part3_q2 = r"""
 **Your answer:**
+We expect the FPR to be higher when the ratio between positive labels and negative labels in the 
+training dataset does not approximate the real-life ratio. For example, in email spam detection, if we use more spam 
+emails than there are in real life to expose the model to many spam samples, 
+the classifier may become overly sensitive, leading to a higher FPR.
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+Conversely, we expect the FNR to be higher when the ratio between positive labels (e.g., disease cases) and negative 
+labels (e.g., healthy cases) in the training dataset does not reflect the real-life ratio. 
+This can occur in cases where positive samples are hard to obtain, such as rare diseases. 
+The lack of sufficient positive examples can prevent the classifier from learning to detect them effectively,
+resulting in a higher FNR.
 
 """
 
