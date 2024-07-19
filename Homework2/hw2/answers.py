@@ -550,7 +550,7 @@ def part4_optim_hp():
     #    Loss classes in torch.nn or one of the loss functions from torch.nn.functional.
     # ====== YOUR CODE: ======
     loss_fn = torch.nn.CrossEntropyLoss()
-    lr = 0.1
+    lr = 0.101
     weight_decay = 0.0
     momentum = 0.001
     # ========================

@@ -4,6 +4,7 @@ import itertools as it
 from torch import Tensor
 from typing import Sequence
 
+from .layers import Dropout
 from .mlp import MLP, ACTIVATIONS, ACTIVATION_DEFAULT_KWARGS
 
 POOLINGS = {"avg": nn.AvgPool2d, "max": nn.MaxPool2d}
@@ -78,6 +79,7 @@ class CNN(nn.Module):
         #  Apply pooling to reduce dimensions after every P convolutions, using the
         #  pooling type and pooling parameters.
         #  Note: If N is not divisible by P, then N mod P additional
+        #  CONV->ACTs should exist at the end, without a POOL after them.
         #  CONV->ACTs should exist at the end, without a POOL after them.
         # ====== YOUR CODE: ======
         # get the values with default if not present or empty
@@ -215,14 +217,40 @@ class ResidualBlock(nn.Module):
         #  - Don't create layers which you don't use! This will prevent
         #    correct comparison in the test.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        main_path_layers = []
+        curr_in_channels = in_channels
+        for i, (out_channel_size, kernel_size) in enumerate(zip(channels, kernel_sizes)):
+            padding = (kernel_size - 1) // 2
+            dilation = 1
+            stride = 1
+            main_path_layers.append(nn.Conv2d(in_channels=curr_in_channels, out_channels=out_channel_size,
+                                              padding=padding, kernel_size=kernel_size, stride=stride,dilation=dilation,
+                                              bias=True))
+
+            curr_in_channels = out_channel_size
+            if i < len(channels)-1:
+                if dropout > 0:
+                    main_path_layers.append(nn.Dropout2d(dropout))
+                if batchnorm:
+                    main_path_layers.append(nn.BatchNorm2d(out_channel_size))
+                main_path_layers.append(ACTIVATIONS[activation_type](**activation_params))
+
+        self.main_path = nn.Sequential(*main_path_layers)
+
+        shortcut_layers = []
+        if len(channels) > 0 and channels[-1] != in_channels:
+            shortcut_layers.append(nn.Conv2d(in_channels=in_channels, out_channels=channels[-1], kernel_size=1,
+                                             padding=0, dilation=1, stride=1, bias= False))
+
+        self.shortcut_path = nn.Sequential(*shortcut_layers)
 
     def forward(self, x: Tensor):
         # TODO: Implement the forward pass. Save the main and residual path to `out`.
         out: Tensor = None
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        main_path = self.main_path(x)
+        shortcut = self.shortcut_path(x)
+        out = main_path + shortcut
         # ========================
         out = torch.relu(out)
         return out
@@ -264,7 +292,12 @@ class ResidualBottleneckBlock(ResidualBlock):
         #  Initialize the base class in the right way to produce the bottleneck block
         #  architecture.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        new_inner_channels = [inner_channels[0], *inner_channels, in_out_channels]
+        new_inner_kernel_sizes = [1, *inner_kernel_sizes, 1]
+        super().__init__(in_channels=in_out_channels,
+                         channels=new_inner_channels,
+                         kernel_sizes=new_inner_kernel_sizes,
+                         **kwargs)
         # ========================
 
 
