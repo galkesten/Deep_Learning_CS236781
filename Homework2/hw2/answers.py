@@ -560,14 +560,107 @@ def part4_optim_hp():
 part4_q1 = r"""
 **Your answer:**
 
+#### 1. Number of parameters
+**Regular Block**
+- **First 3x3 Convolution**:
+   Parameters = $F*F*C_{in}*C_{out}+ Bias$ = (3 * 3 * 256 * 256) + 256 = 590,080
+- **Second 3x3 Convolution**:
+   Parameters = $F*F*C_in*C_out+ Bias$ = (3 * 3 * 256 * 256) + 256 = 590,080
+- **Total Parameters for Regular Block**: 590,080 (First Convolution) + 590,080 (Second Convolution) = 1,180,160
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+**Bottleneck Block**
 
+- **First 1x1 Convolution**: Parameters = (1 * 1 * 256 * 64) + 64 = 16,384 + 64 = 16,448
+-  **Second 3x3 Convolution**: Parameters = (3 * 3 * 64 * 64) + 64 = 36,864 + 64 = 36,928
+- **Third 1x1 Convolution**: Parameters = (1 * 1 * 64 * 256) + 256 = 16,384 + 256 = 16,640
+- **Total Parameters for Bottleneck Block**: 16,448 (First Convolution) + 36,928 (Second Convolution) + 16,640 (Third Convolution) = 70,016
+
+
+#### 2. Number of floating points operations:
+
+**Regular Block**
+
+**First 3x3 Convolution**:
+- Input: A tensor of shape $(C_{in},H,W)$ = (256,H,W)
+- Output: A tensor of shape $(C_{out},H,W)$ = (256,H,W). This is true because we don't change the H,W dimensions 
+in residual blocks to allow the sum with shortcut the end.
+- FLOPS: For each element in 1 output feature map we will have to do $F*F*C_{in}$ = $3*3*256$ operations(ignoring the addition of bias term).
+We have 256 output feature maps and HW elements in each feature map so we will have to do $F*F*C_{in}*C_{out}HW = 
+3*3*256*256*HW = 589824*HW$ operations 
+
+**Second 3x3 Convolution**:
+
+- Input: A tensor of shape $(C_{in},H,W)$ = (256,H,W)
+- Output: A tensor of shape $(C_{out},H,W)$ = (256,H,W).
+- Flops: Applying the same logic as before we get also  $589824*HW$ operations 
+
+**Total Flops for regular block**: $1179648*HW$ operations
+
+**Bottleneck Block**
+
+**First 1x1 Convolution**:
+
+- Input: A tensor of shape $(C_{in},H,W)$ = (256,H,W)
+- Output: A tensor of shape $(C_{out},H,W)$ = (64,H,W). This is true because we don't change the H,W dimensions
+- FLOPS: For each element in 1 output feature map we will have to do $F*F*C_{in} = 1*1*256$ operations(ignoring the addition of bias term).
+We have 64 output feature maps and HW elements in each feature map so we 
+will have to do $F*F*C_{in}**C_{out}HW$ = $1*1*256*64*HW = 16384*HW$ operations 
+
+**Second 3x3 Convolution**:
+- Input: A tensor of shape $(C_{in},H,W)$ = (64,H,W)
+- Output: A tensor of shape $(C_{out},H,W)$ = (64,H,W).
+- FLOPS: For each element in 1 output feature map we will have to do $F*F*C_{in} = 3*3*64$ operations. 
+Therefore we get $3*3*64*64*HW = 36864HW$ operations
+    
+**Third 1x1 Convolution**: 
+- Input: A tensor of shape $(C_{in},H,W)$ = (64,H,W)
+- Output: A tensor of shape $(C_{out},H,W)$ = (256,H,W). 
+- FLOPS: For each element in 1 output feature map we will have to do $F*F*C_{in} = 1*1*264$ operations(ignoring the addition of bias term).
+ We have 256 output feature maps and HW elements in each feature map so we will have to do $F*F*C_{in}**C_{out}HW$ =
+ $1*1*256*64*HW = 16384*HW$ operations
+     
+- **Total Flops for bottleneck block**: $2*16384*HW + 36864HW = 69632HW$ operations
+
+#### 3. Ability to Combine Input
+
+**Regular Block**
+
+**Spatial Combination (Within Feature Maps)**:
+- Each 3x3 convolution can combine information from a 3x3 neighborhood of pixels within each feature map.
+- After two 3x3 convolutions, the receptive field is 5x5, meaning each output pixel can "see" a 5x5 area of the input.
+- This allows for a relatively larger spatial context to be considered within each feature map.
+
+**Feature Map Combination (Across Feature Maps)**:
+- Each 3x3 convolution operates on all 256 channels and produces 256 output channels.
+- Thus, we also get a strong ability to mix elements across feature maps.
+
+**Bottleneck Block**
+
+**Spatial Combination (Within Feature Maps)**:
+- The initial 1x1 convolution does not change the spatial context—it only combines information across feature maps.
+- The 3x3 convolution then combines spatial information within a 3x3 neighborhood.
+- The final 1x1 convolution again does not change the spatial context.
+- Overall, the receptive field for the spatial combination in a bottleneck block is 3x3, which is smaller compared to 
+the regular block.
+
+**Feature Map Combination (Across Feature Maps)**:
+- **First 1x1 Convolution**:
+  - This layer combines information across the feature maps (channels). It reduces the number of channels from 256 to 64. 
+  Each output channel in the 1x1 convolution is a combination of all 256 input channels. 
+  This allows the network to mix information from all feature maps and learn a compact representation.
+- **Second 3x3 Convolution**:
+  - This operates on the reduced set of channels and combines information both in the same feature map and across
+  feature maps. 
+- **Third 1x1 Convolution**:
+  - This expands the number of channels back to the original. Again, each output channel in this 1x1 convolution 
+  is a combination of all 64 input channels. This allows the network to mix information from the reduced feature maps 
+  and expand it back to a richer set of features.
+
+#### Conclusions:
+We can see that the regular residual block has a stronger ability to mix elements within feature maps compared to bottleneck
+blocks, and both have similar ability to combine information across feature maps. 
+However, the bottleneck block has computational advantages in both FLOPs and number of parameters. 
+So, we have to trade off between stronger ability to combine information and computational resources.
 """
 
 # ==============
