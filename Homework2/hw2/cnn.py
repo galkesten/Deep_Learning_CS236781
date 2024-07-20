@@ -241,6 +241,9 @@ class ResidualBlock(nn.Module):
         if len(channels) > 0 and channels[-1] != in_channels:
             shortcut_layers.append(nn.Conv2d(in_channels=in_channels, out_channels=channels[-1], kernel_size=1,
                                              padding=0, dilation=1, stride=1, bias= False))
+        else:
+            identity = nn.Identity()
+            shortcut_layers.append(identity)
 
         self.shortcut_path = nn.Sequential(*shortcut_layers)
 
@@ -346,7 +349,31 @@ class ResNet(CNN):
         #    2 + len(inner_channels). [1 for each 1X1 proection convolution] + [# inner convolutions].
         # - Use batchnorm and dropout as requested.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        groups_of_channels = [self.channels[i:i +self.pool_every] for i in range(0, len(self.channels), self.pool_every)]
+        curr_in_channels = in_channels
+        shared_params = dict(batchnorm=self.batchnorm,dropout=self.dropout,
+                             activation_type=self.activation_type, activation_func_param=self.activation_params)
+        for group in groups_of_channels:
+            if self.bottleneck and curr_in_channels == group[-1] and curr_in_channels == group[0]:
+                inner_channels = group[1:-1]
+                kernels = [3]*len(inner_channels)
+                bottleneck = ResidualBottleneckBlock(in_out_channels=curr_in_channels, inner_channels=inner_channels,
+                                                     inner_kernel_sizes=kernels, **shared_params)
+                layers.append(bottleneck)
+            else:
+                res_block = ResidualBlock(in_channels=curr_in_channels, channels=group,
+                                          kernel_sizes=[3]*len(group),  **shared_params)
+                layers.append(res_block)
+
+            if len(group) == self.pool_every:
+                pooling_layer = POOLINGS[self.pooling_type](**self.pooling_params)
+                layers.append(pooling_layer)
+
+            curr_in_channels = group[-1]
         # ========================
         seq = nn.Sequential(*layers)
         return seq
+
+
+
+
