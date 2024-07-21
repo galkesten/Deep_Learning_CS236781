@@ -747,13 +747,36 @@ So, we have to trade off between stronger ability to combine information and com
 part5_q1 = r"""
 **Your answer:**
 
+The results of Experiment 1.1 show that the depth of the network impacts accuracy.
+The `L16` configurations (16 layers per block) with both 32 and 64 filters per layer were non-trainable, 
+with test accuracy stagnant at 10%. This is likely due to vanishing gradients and overfitting, where the
+network struggles
+ to learn effectively. The `L8` configurations (8 layers per block) showed better performance, with `L8_K32`
+ reaching approximately 60.18%
+test accuracy and `L8_K64` reaching around 61.47%. Although these results were better than `L16`, 
+they were not the best observed.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+The `L4` configurations produced the best results. The `L4_K32` configuration achieved a
+test accuracy of about 63.99%, while `L4_K64` reached around 65.51%. This works better compared to 'L2' and 'L8'.
+ The `L2` configurations also performed well, particularly with more filters. 
+ The `L2_K32` configuration achieved about 63.68% test accuracy, and `L2_K64` reached around 63.08%. 
+
+In choosing hyperparameters, we focused on ensuring convergence and avoiding vanishing gradients. 
+We manually tuned various hyperparameters, including learning rate and regularization. 
+A very small learning rate (0.0001) was necessary for the `L8` configurations to ensure stable learning and convergence. 
+We also had to use small regularization values, as larger ones would encourage
+smaller weights and exacerbate the vanishing gradient problem. This 
+ led to observable overfitting, as seen in the training and testing loss graphs, 
+ but was necessary to prevent the gradients from vanishing entirely and to allow 
+ the deeper network to learn. Despite the extensive tuning, the highest accuracy achieved
+ was around 65%, indicating room for improvement.
+
+To address the vanishing gradients problem in very deep networks,we can use 
+ batch normalization which stabilize the learning process by normalizing the inputs of each layer.
+  Additionally, adding residual connections (as in ResNet architectures) can provide shortcut paths for gradients, 
+  allowing for more effective training of deep networks. 
+These strategies can mitigate the problems associated with training very deep networks and improve their performance.
+T
 
 """
 
