@@ -420,13 +420,27 @@ we need to retain the entire computation graph until the backward pass is comple
 part2_q4 = r"""
 **Your answer:**
 
+4.1. We can use the following algorithm
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+1. **Initialization**:
+    - Set $x \leftarrow x_0$
+    - Set $\text{gradient} \leftarrow 1$
+    
+2. **Forward Pass**:
+    - For $j = 1$ to $n$:
+        -  $\text{value} \leftarrow f_j(x)$
+        -  $\text{gradient} \leftarrow \text{gradient} \cdot f_j'(x)$
+        -  $x \leftarrow \text{value}$
+    
+3. **Result**:
+    - The final $\text{gradient}$ is $\nabla f(x_0)$
+
+
+- Memory Usage:
+The algorithm uses only two variables $x$ and $\text{gradient}$ throughout the computation, 
+which requires O(1) memory. We still stay with linear time for computation complexity.
+The draw back is that we don't have intermidiate gradients calc which are important for neural networks.
+
 
 """
 
