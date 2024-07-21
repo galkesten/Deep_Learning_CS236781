@@ -420,8 +420,11 @@ we need to retain the entire computation graph until the backward pass is comple
 part2_q4 = r"""
 **Your answer:**
 
-4.1. We can use the following algorithm
+4.1. Given a computation graph where we have an edge from $f_{j-1}$ to $f_{j}$ if $f_{j-1}(a)$ is the input for $f_{j}$,
+we can compute both the value of f(x0) and the value of the f'(x0) without storing
+intermediate values.
 
+The algorithm:
 1. **Initialization**:
     - Set $x \leftarrow x_0$
     - Set $\text{gradient} \leftarrow 1$
@@ -438,9 +441,67 @@ part2_q4 = r"""
 
 - Memory Usage:
 The algorithm uses only two variables $x$ and $\text{gradient}$ throughout the computation, 
-which requires O(1) memory. We still stay with linear time for computation complexity.
-The draw back is that we don't have intermidiate gradients calc which are important for neural networks.
+which requires $O(1)$ memory. The computational complexity remains linear, $O(n)$.
 
+4.2
+
+Given a computation graph where we have an edge from $f_{j-1}$ to $f_{j}$ if $f_{j-1}(a)$ is the input for $f_{j}$,
+we can compute the value of the f' without storing intermediate values. 
+However, in this case we still need to store values from the first forward pass.
+
+If each node in the computational graph store the values of the function the algorithm will be:
+
+The algorithm:
+1. **Initialization**:
+    - Set $\text{gradient} \leftarrow 1$
+    
+2. **Forward Pass**:
+    - For $j =n-1$ to $0$:
+        -  $\text{gradient} \leftarrow \text{gradient} \cdot v_{j+1}.fn.derivative(v_{j}.val)$
+    
+3. **Result**:
+    - The final $\text{gradient}$ is $\nabla f(x_0)$
+
+The algorithm requires storing the intermediate values $v_j$ from the forward pass, leading to a memory complexity of 
+$O(n)$. However we reduced memory savings by factor 2 since we don't need to save all the 'grad' properties for each vertex.
+The computational complexity remains linear, $O(n)$.
+
+4.3
+In general computational graphs, memory usage is proportional to the amount of memory needed to store 
+intermediate values required to evaluate a node $f_n$. 
+This is because there might be multiple paths to $f_n$, necessitating the storage of intermediate values along these paths.
+However, we can release memory during the calculation to optimize usage. 
+This differs from the backward pass, where we need to store all intermediate values of the function valuws from 
+the input node to $f_n$ in the first forward pass. 
+
+One way to achieve ${O}(1)$ memory usage with forward mode AD theoretically is to know in advance all paths from 
+$v_0$ to $v_n$ and traverse each path separately, 
+then sum the contributions sequentially. However, this would require too much time due to the exponential 
+number of paths in complex graphs.
+We also know that when using forward mode AD we might need to perform multiple traversals for each input variable to 
+compute the gradient with respect to the loss. In contrast, there are usually few outputs like a single loss function, 
+so backward mode usually 
+requires fewer passes on the computational graph. 
+So, we usually need to trade off between memory complexity (forward AD is better) and runtime (backward AD is better).
+
+
+Practical solutions that we can use for AD:
+ 
+- **Memory Release**: During the computation, release memory for intermediate values that are no longer needed. 
+This helps in managing memory more efficiently.
+This helps in reducing the number of intermediate values stored.
+- **Checkpointing for backward mode AD**: Store values at strategic checkpoints during the forward pass and recompute 
+intermediate values as 
+needed during the backward pass. This reduces the memory complexity but still requires storage of necessary values.
+- **Selective Storage**: Trade off by storing only some of the intermediate values
+ based on their necessity for future computations.
+**Mixed Mode AD**: Use a combination of forward and backward mode AD. Apply forward mode to shallow parts of 
+the network and backward mode to deeper parts where the number of parameters is larger.
+
+4.4
+Big neural networks usually have a huge number of parameters and a lot of inputs.
+They usually need a lot of memory to compute the backpropagation algorithm.
+Using some of the methods above can reduce the amount of memory these networks require and allow efficient learning.
 
 """
 
