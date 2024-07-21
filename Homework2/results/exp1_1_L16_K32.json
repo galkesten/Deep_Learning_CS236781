@@ -1,0 +1,67 @@
+{
+  "config": {
+    "run_name": "exp1_1",
+    "out_dir": "/home/galkesten/CS236781/Homework2/results",
+    "seed": 42,
+    "device": null,
+    "bs_train": 32,
+    "bs_test": 32,
+    "batches": 1500,
+    "epochs": 30,
+    "early_stopping": 3,
+    "checkpoints": null,
+    "lr": 0.0001,
+    "reg": 0.0001,
+    "filters_per_layer": [
+      32
+    ],
+    "pool_every": 4,
+    "hidden_dims": [
+      128
+    ],
+    "model_type": "cnn",
+    "conv_params": {
+      "kernel_size": 3,
+      "stride": 1,
+      "padding": 1
+    },
+    "activation_type": "relu",
+    "activation_params": {},
+    "pooling_type": "max",
+    "pooling_params": {
+      "kernel_size": 2
+    },
+    "batchnorm": false,
+    "dropout": 0.0,
+    "bottleneck": false,
+    "kw": {},
+    "layers_per_block": 16
+  },
+  "results": {
+    "num_epochs": 4,
+    "train_loss": [
+      2.3029985683759056,
+      2.302762880007426,
+      2.3027409542401633,
+      2.3027306537628176
+    ],
+    "train_acc": [
+      9.725,
+      9.6625,
+      9.63125,
+      9.633333333333333
+    ],
+    "test_loss": [
+      2.302705240706666,
+      2.302670889388258,
+      2.302654810226002,
+      2.3026424474990406
+    ],
+    "test_acc": [
+      10.0,
+      10.0,
+      10.0,
+      10.0
+    ]
+  }
+}

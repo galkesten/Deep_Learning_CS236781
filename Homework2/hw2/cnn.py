@@ -106,7 +106,7 @@ class CNN(nn.Module):
             in_channels = channel
             layer_counter += 1
 
-            if layer_counter % self.pool_every == 0:
+            if self.pool_every > 0 and layer_counter % self.pool_every == 0:
                 layers.append(POOLINGS[self.pooling_type](kernel_size=pooling_kernel_size))
         # If N is not divisible by P, then N mod P additional
         # CONV->ACTs should exist at the end, without a POOL after them
@@ -349,7 +349,11 @@ class ResNet(CNN):
         #    2 + len(inner_channels). [1 for each 1X1 proection convolution] + [# inner convolutions].
         # - Use batchnorm and dropout as requested.
         # ====== YOUR CODE: ======
-        groups_of_channels = [self.channels[i:i +self.pool_every] for i in range(0, len(self.channels), self.pool_every)]
+        if self.pool_every == 0:
+            groups_of_channels = [self.channels]
+        else:
+            groups_of_channels = [self.channels[i:i + self.pool_every] for i in
+                                  range(0, len(self.channels), self.pool_every)]
         curr_in_channels = in_channels
         shared_params = dict(batchnorm=self.batchnorm,dropout=self.dropout,
                              activation_type=self.activation_type, activation_func_param=self.activation_params)

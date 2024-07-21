@@ -71,7 +71,7 @@ def cnn_experiment(
     hidden_dims=[1024],
     model_type="cnn",
     # You can add extra configuration for your experiments here
-    conv_params={},
+    conv_params= {"kernel_size":3, "stride":1, "padding":1},
     activation_type: str = "relu",
     activation_params: dict = {},
     pooling_type: str = "max",
@@ -136,7 +136,7 @@ def cnn_experiment(
               **additional_args
               )
     loss_fn = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=lr, momentum=0.9, weight_decay=reg)
+    optimizer = torch.optim.Adam(params=model.parameters(), lr=lr, weight_decay=reg)
     classifier = ArgMaxClassifier(model=model)
     trainer = ClassifierTrainer(classifier, loss_fn, optimizer, device=device)
 
