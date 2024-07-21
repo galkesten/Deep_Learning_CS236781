@@ -15,23 +15,21 @@ mkdir -p $OUTPUT_DIR
 
 
 # Function to run experiment 1.1
-run_exp_1_2(){
-  KS=(32 64 128)
-  LS=(8)
+run_exp_1_3(){
+  LS=(2 3 4)
   # Loop through each configuration and submit the experiment
-  for K in "${KS[@]}"; do
-      for L in "${LS[@]}"; do
-          RUN_NAME="exp1_2_L${L}_K${K}"
+  for L in "${LS[@]}"; do
+      RUN_NAME="exp1_3_L${L}_K${K}"
 
-          sbatch \
-            -N $NUM_NODES \
-            -c $NUM_CORES \
-            --gres=gpu:$NUM_GPUS \
-            --job-name "${RUN_NAME}" \
-            --mail-user $MAIL_USER \
-            --mail-type $MAIL_TYPE \
-            -o "${OUTPUT_DIR}/${RUN_NAME}.out" \
-            <<EOF
+      sbatch \
+        -N $NUM_NODES \
+        -c $NUM_CORES \
+        --gres=gpu:$NUM_GPUS \
+        --job-name "${RUN_NAME}" \
+        --mail-user $MAIL_USER \
+        --mail-type $MAIL_TYPE \
+        -o "${OUTPUT_DIR}/${RUN_NAME}.out" \
+        <<EOF
 #!/bin/bash
 echo "*** SLURM BATCH JOB '${RUN_NAME}' STARTING ***"
 
@@ -40,10 +38,10 @@ source \$HOME/miniconda3/etc/profile.d/conda.sh
 conda activate cs236781-hw2-git
 
 # Run the experiment
-python -m hw2.experiments run-exp -n "exp1_2" \
+python -m hw2.experiments run-exp -n "exp1_3" \
     --seed 42 --bs-train 32 --batches 1500 --bs-test 32 \
     --epochs 30 --early-stopping 3 \
-    --filters-per-layer ${K} --layers-per-block ${L} \
+    --filters-per-layer 64 128 --layers-per-block ${L} \
     --pool-every 4 --hidden-dims 128\
     --lr 1e-4 --reg 1e-4 --model-type cnn \
     --out-dir /home/galkesten/CS236781/Homework2/results
@@ -55,4 +53,4 @@ EOF
 }
 
 # Call the function to run experiment 1.1
-run_exp_1_2
+run_exp_1_3

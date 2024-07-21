@@ -1,0 +1,79 @@
+{
+  "config": {
+    "run_name": "exp1_2",
+    "out_dir": "/home/galkesten/CS236781/Homework2/results",
+    "seed": 42,
+    "device": null,
+    "bs_train": 32,
+    "bs_test": 32,
+    "batches": 1500,
+    "epochs": 30,
+    "early_stopping": 3,
+    "checkpoints": null,
+    "lr": 0.0001,
+    "reg": 0.0001,
+    "filters_per_layer": [
+      128
+    ],
+    "pool_every": 4,
+    "hidden_dims": [
+      128
+    ],
+    "model_type": "cnn",
+    "conv_params": {
+      "kernel_size": 3,
+      "stride": 1,
+      "padding": 1
+    },
+    "activation_type": "relu",
+    "activation_params": {},
+    "pooling_type": "max",
+    "pooling_params": {
+      "kernel_size": 2
+    },
+    "batchnorm": false,
+    "dropout": 0.0,
+    "bottleneck": false,
+    "kw": {},
+    "layers_per_block": 4
+  },
+  "results": {
+    "num_epochs": 7,
+    "train_loss": [
+      1.550985885500908,
+      1.1853490798870723,
+      0.9915043841004372,
+      0.8428427537679672,
+      0.7135434267719587,
+      0.5833244279325008,
+      0.45005160893996554
+    ],
+    "train_acc": [
+      44.14791666666667,
+      57.97291666666667,
+      65.10833333333333,
+      70.56041666666667,
+      75.45833333333333,
+      80.07083333333334,
+      85.17291666666667
+    ],
+    "test_loss": [
+      1.3182303079020101,
+      1.1308309306351902,
+      1.0227575498267103,
+      0.9831335590289424,
+      1.0126516337211902,
+      1.115857475481856,
+      1.31577321020559
+    ],
+    "test_acc": [
+      52.77,
+      59.66,
+      63.89,
+      66.16,
+      66.05,
+      65.26,
+      64.21
+    ]
+  }
+}
