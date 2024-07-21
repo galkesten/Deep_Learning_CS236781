@@ -748,22 +748,22 @@ part5_q1 = r"""
 **Your answer:**
 
 The results of Experiment 1.1 show that the depth of the network impacts accuracy.
-The `L16` configurations (16 layers per block) with both 32 and 64 filters per layer were non-trainable, 
+The L16 configurations (16 layers per block) with both 32 and 64 filters per layer were non-trainable, 
 with test accuracy stagnant at 10%. This is likely due to vanishing gradients and overfitting, where the
 network struggles
- to learn effectively. The `L8` configurations (8 layers per block) showed better performance, with `L8_K32`
+ to learn effectively. The L8 configurations (8 layers per block) showed better performance, with L8_K32
  reaching approximately 60.18%
-test accuracy and `L8_K64` reaching around 61.47%. Although these results were better than `L16`, 
+test accuracy and L8_K64 reaching around 61.47%. Although these results were better than L16, 
 they were not the best observed.
 
-The `L4` configurations produced the best results. The `L4_K32` configuration achieved a
-test accuracy of about 63.99%, while `L4_K64` reached around 65.51%. This works better compared to 'L2' and 'L8'.
- The `L2` configurations also performed well, particularly with more filters. 
- The `L2_K32` configuration achieved about 63.68% test accuracy, and `L2_K64` reached around 63.08%. 
+The L4 configurations produced the best results. The L4_K32 configuration achieved a
+test accuracy of about 63.99%, while L4_K64 reached around 65.51%. This works better compared to L2 and L8.
+ The L2 configurations also performed well, particularly with more filters. 
+ The L2_K32 configuration achieved about 63.68% test accuracy, and L2_K64 reached around 63.08%. 
 
 In choosing hyperparameters, we focused on ensuring convergence and avoiding vanishing gradients. 
 We manually tuned various hyperparameters, including learning rate and regularization. 
-A very small learning rate (0.0001) was necessary for the `L8` configurations to ensure stable learning and convergence. 
+A very small learning rate (0.0001) was necessary for the L8 configurations to ensure stable learning and convergence. 
 We also had to use small regularization values, as larger ones would encourage
 smaller weights and exacerbate the vanishing gradient problem. This 
  led to observable overfitting, as seen in the training and testing loss graphs, 
@@ -772,37 +772,49 @@ smaller weights and exacerbate the vanishing gradient problem. This
  was around 65%, indicating room for improvement.
 
 To address the vanishing gradients problem in very deep networks,we can use 
- batch normalization which stabilize the learning process by normalizing the inputs of each layer.
-  Additionally, adding residual connections (as in ResNet architectures) can provide shortcut paths for gradients, 
-  allowing for more effective training of deep networks. 
+batch normalization which stabilize the learning process by normalizing the inputs of each layer.
+Additionally, adding residual connections (as in ResNet architectures) can provide shortcut paths for gradients, 
+allowing for more effective training of deep networks. 
 These strategies can mitigate the problems associated with training very deep networks and improve their performance.
 T
 
 """
 
 part5_q2 = r"""
-**Your answer:**
+The results of Experiment 1.2 provide further insights into the effect of varying the number of filters per layer (K)
+ in combination with different network depths (L).
+ For the L2 configurations, we observed a slight improvement in test accuracy as `K` increased, 
+ Despite using early stopping, the `L2_K128` configuration converged too 
+ quickly, necessitating stopping after less than 10 epochs. We were unable to use a changing learning rate to control 
+ convergence effectively. 
+ This shows that for shallow network, bigger amount of feature maps has  
+ the possibility to improve accuracy if we control overfitting.
+ The `L4` configurations showed similar trends to `L2`, with `K=128` leading to overfitting 
+ and `K=64` yielding the best performance. For the `L8` configurations, we observed similar results but 
+ with performance being less good than the `L4` and `L2` configurations. 
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
-
+Comparing these results to Experiment 1.1, we again see that the performance for `L8` is less favorable than the 
+other depths, likely due to the vanishing gradients problem. The `L4` configuration with `K=64` achieved the best 
+performance, consistent with previous findings.
+ Across both experiments, overfitting remains a significant issue that we struggled to control, 
+caused by the need to choose hyper parameters that will allow L8 configuration to converge.
 """
 
 part5_q3 = r"""
 **Your answer:**
+Experiment 1.3 explored varying both the number of filters and the network depth. 
+The L2 configuration with layers [64, 64, 128, 128] achieved the highest test accuracy of approximately 65.54%. 
+The L3 configuration with layers [64, 64, 64, 128, 128, 128] showed a lower peak test accuracy (64.01%). 
+There is probably an influence of vanishing gradients phenomena also with 6 depth network.
+The L4 configuration with layers [64, 64, 64, 64, 128, 128, 128, 128] exhibited the most significant overfitting, 
+achieving a peak accuracy of around 64.25% before declining. 
 
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+Again, we see that the performance of 8 depth layer has a decrease in performance, despite the fact we expect it to learn
+better with the ability to learn hierarchical features.
+Additionally, we do not see significant improvement by employing the 64-128 configuration 
+compared to four layers of 64 as before. 
+We also observe that incorporating  128 filters led to quicker overfitting,
+necessitating early stopping to prevent excessive epochs, consistent with the behavior observed previously.
 
 """
 
