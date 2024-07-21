@@ -19,7 +19,7 @@ run_exp_1_3(){
   LS=(2 3 4)
   # Loop through each configuration and submit the experiment
   for L in "${LS[@]}"; do
-      RUN_NAME="exp1_3_L${L}_K${K}"
+      RUN_NAME="exp1_3_L${L}"
 
       sbatch \
         -N $NUM_NODES \
@@ -48,9 +48,7 @@ python -m hw2.experiments run-exp -n "exp1_3" \
 
 echo "*** SLURM BATCH JOB '${RUN_NAME}' DONE ***"
 EOF
-      done
   done
 }
-
 # Call the function to run experiment 1.1
 run_exp_1_3
