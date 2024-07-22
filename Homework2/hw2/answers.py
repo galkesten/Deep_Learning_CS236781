@@ -467,7 +467,11 @@ $O(n)$. However we reduced memory savings by factor 2 since we don't need to sav
 The computational complexity remains linear, $O(n)$.
 
 A way to reduce the memory in factor $\sqrt(N)$ is called checkpoints.
-**Checkpoints Algorithm*:
+Checkpoints strategically reduces this requirement by storing only key computations and recomputing 
+intermediate values during the backward pass as needed.
+
+
+**Checkpoints Algorithm**:
  1. **Initialization**:
     - Determine checkpoints at strategic intervals (e.g., every $\sqrt{n}$ steps).
     - Set $\text{gradient} \leftarrow 1$.
@@ -490,41 +494,29 @@ A way to reduce the memory in factor $\sqrt(N)$ is called checkpoints.
   checkpoint spacing.
 
 4.3
-In general computational graphs, memory usage is proportional to the amount of memory needed to store 
-intermediate values required to evaluate a node $f_n$. 
-This is because there might be multiple paths to $f_n$, necessitating the storage of intermediate values along these paths.
-However, we can release memory during the calculation to optimize usage. 
-This differs from the backward pass, where we need to store all intermediate values of the function valuws from 
-the input node to $f_n$ in the first forward pass. 
+In general computational graphs, achieving $O(1)$ memory usage like in ideal forward mode AD scenarios is not feasible. 
+This limitation arises because complex graphs often have multiple paths leading to the final node $f_n$, 
+each requiring the storage of intermediate values. Theoretically, if we could pre-determine a
+ll paths from $v_0$ to $v_n$, we could traverse each path separately and sequentially to minimize memory usage. 
+However, this method is impractical due to the exponential number of potential paths in a general graph, 
+which also precludes the use of parallel processing techniques.
 
-One way to achieve ${O}(1)$ memory usage with forward mode AD theoretically is to know in advance all paths from 
-$v_0$ to $v_n$ and traverse each path separately, 
-then sum the contributions sequentially. However, this would require too much time due to the exponential 
-number of paths in complex graphs.
-We also know that when using forward mode AD we might need to perform multiple traversals for each input variable to 
-compute the gradient with respect to the loss. In contrast, there are usually few outputs like a single loss function, 
-so backward mode usually 
-requires fewer passes on the computational graph. 
-So, we usually need to trade off between memory complexity (forward AD is better) and runtime (backward AD is better).
+Consequently, in practical settings, the memory usage for forward mode AD tends to be proportional to the amount of 
+memory needed to store intermediate values necessary for evaluating the node $f_n$. 
+Nonetheless, we can adopt checkpointing strategies—commonly used in both forward and backward mode 
+AD—to store computational values only at strategic points. This approach helps in managing memory more effectively.
 
-
-Practical solutions that we can use for AD:
- 
-- **Memory Release**: During the computation, release memory for intermediate values that are no longer needed. 
-This helps in managing memory more efficiently.
-This helps in reducing the number of intermediate values stored.
-- **Checkpointing for backward mode AD**: Store values at strategic checkpoints during the forward pass and recompute 
-intermediate values as 
-needed during the backward pass. This reduces the memory complexity but still requires storage of necessary values.
-- **Selective Storage**: Trade off by storing only some of the intermediate values
- based on their necessity for future computations.
-**Mixed Mode AD**: Use a combination of forward and backward mode AD. Apply forward mode to shallow parts of 
-the network and backward mode to deeper parts where the number of parameters is larger.
+Additional strategies to further reduce memory usage include:
+- **Memory Release**: Actively manage memory by releasing intermediate values that are no longer needed during computations.
+- **Mixed Mode AD**: Utilize forward mode AD for sections of the graph with fewer paths from input to output, and apply backward mode AD for more complex sections of the graph. This hybrid approach leverages the strengths of both AD modes based on the specific structure of the network.
 
 4.4
-Big neural networks usually have a huge number of parameters and a lot of inputs.
-They usually need a lot of memory to compute the backpropagation algorithm.
-Using some of the methods above can reduce the amount of memory these networks require and allow efficient learning.
+Large neural networks, characterized by their vast number of parameters and extensive inputs, 
+typically require substantial memory to compute gradients during backpropagation. 
+As networks deepen, the need to store intermediate values escalates, further increasing memory demands. 
+Employing the aforementioned strategies, such as checkpointing and selective memory release, 
+can significantly reduce the memory footprint required for training. These techniques not only make it feasible to 
+train deeper and more complex models but also enhance the efficiency of the learning process by optimizing memory usage.
 
 """
 
