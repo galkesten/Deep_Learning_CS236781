@@ -763,7 +763,8 @@ So, we have to trade off between stronger ability to combine information and com
 
 part5_q1 = r"""
 **Your answer:**
-
+In this experiment, we used the Adam optimizer, max pooling every 4 layers, a learning rate of 0.0001 and regularization
+0.0001. batch size 32, early stopping=3. This is also the hyperparameters that was chosen for experiments 1.2,1.3.
 The results of Experiment 1.1 show that the depth of the network impacts accuracy.
 The L16 configurations (16 layers per block) with both 32 and 64 filters per layer were non-trainable, 
 with test accuracy stagnant at 10%. This is likely due to vanishing gradients and overfitting, where the
@@ -776,7 +777,8 @@ they were not the best observed.
 The L4 configurations produced the best results. The L4_K32 configuration achieved a
 test accuracy of about 63.99%, while L4_K64 reached around 65.51%. This works better compared to L2 and L8.
  The L2 configurations also performed well, particularly with more filters. 
- The L2_K32 configuration achieved about 63.68% test accuracy, and L2_K64 reached around 63.08%. 
+ The L2_K32 configuration achieved about 63.68% test accuracy, and L2_K64 reached around 63.08%.
+ We also believe that max pooling on the fourth layer helped in enhancing the results of L4 compared to L2 configuration.
 
 In choosing hyperparameters, we focused on ensuring convergence and avoiding vanishing gradients. 
 We manually tuned various hyperparameters, including learning rate and regularization. 
@@ -786,7 +788,7 @@ smaller weights and exacerbate the vanishing gradient problem. This
  led to observable overfitting, as seen in the training and testing loss graphs, 
  but was necessary to prevent the gradients from vanishing entirely and to allow 
  the deeper network to learn. Despite the extensive tuning, the highest accuracy achieved
- was around 65%, indicating room for improvement.
+ was around 65%, indicating room for improvement. 
 
 To address the vanishing gradients problem in very deep networks,we can use 
 batch normalization which stabilize the learning process by normalizing the inputs of each layer.
@@ -836,15 +838,56 @@ necessitating early stopping to prevent excessive epochs, consistent with the be
 """
 
 part5_q4 = r"""
-**Your answer:**
+In Experiment 1.4, we explored the impact of skip connections (Residual Networks) on training and performance. 
+We tuned the hyperparameters manually, using the same learning rate, 
+weight decay, and Adam optimizer as before. 
+However, we used max pooling every 8 layers in these experiments to allow effective learning
+in deeper networks (we had to choose the same hyperparameters for all network configurations).
+Additionally, dropout of 0.2 and batch normalization were incorporated to help manage overfitting.
 
+The L8_K32 configuration reached a test accuracy of approximately 69.19%. 
+The model converged well but began to overfit after 10 epochs, as indicated by the rising test loss. 
+The training accuracy continued to increase steadily, suggesting that the model was learning effectively 
+but entered overfitting due to the small filter size and increased depth.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+The `L16_K32` configuration achieved a higher test accuracy of around 72.99%,
+indicating that adding more layers improved the model's capacity to learn complex features. 
+However, overfitting was still a concern as the test loss increased after about 12 epochs.
+The training accuracy was high, with early stopping helping to prevent excessive overfitting.
+The`L32_K32 configuration achieved the highest test accuracy in this set, reaching around 74.82%. 
+Despite the increased depth, the model benefitted from skip connections, 
+which mitigated some of the vanishing gradient issues. The training loss decreased consistently, 
+and the accuracy improved steadily, indicating effective learning. 
+We were also able to train the network for a longer time before early
+stopping compared to other configurations in this experiment.
+
+In the K=[64, 128, 256] configurations, the L2_K64-128-256 configuration achieved a test accuracy of 
+approximately 66.56%. The model learned quickly but showed significant overfitting
+due to the high filter sizes and shallow depth (6 layers). 
+The training accuracy increased rapidly, suggesting the model had enough capacity to learn complex patterns,
+but the generalization was poor. The `L4_K64-128-256` configuration performed better, achieving
+a test accuracy of around 71.91%. The increased depth helped improve generalization,
+though overfitting remained a challenge. The model showed a steady increase in training accuracy,
+with early stopping helping to control overfitting. The `L8_K64-128-256` configuration achieved the highest
+test accuracy in this set, reaching around 75.68%. The deeper network benefitted significantly from the residual
+connections, which helped mitigate vanishing gradients and improved learning.
+The model showed the best training performance, with high training accuracy and a more controlled overfitting pattern.
+
+Overall, we observed several key points from both sets of experiments:
+1. **Skip Connections**: The skip connections allowed us to train deeper networks compared to previous experiments.
+We were able to train networks with depths of 8, 16, and 32 layers without encountering vanishing gradient problems.
+Compared to previous experiments without skip connections, the use of residual networks significantly improved the
+performance of deeper models.
+2. **Depth**: Deeper networks performed best in both sets of experiments. 
+This is likely due to their ability to learn hierarchical features, combined with max pooling every 8 layers,
+which gradually increased the receptive field. The deeper networks also generalized better compared to the
+shallow networks and networks from previous experiments.
+3. **Increased Filter Sizes**: The increased filter sizes (`K=64-128-256` configuration) helped 
+achieve slightly better results compared to the `L32_K32` configuration. However, this configuration is
+suitable only for deeper networks, as observed. In shallow networks, we reached overfitting quite quickly,
+similar to the behavior in Experiment 1.3.
+4. **Hyperparameter Tuning**: We believe that with appropriate hyperparameter tuning for the deeper networks,
+we can achieve even better results.
 
 """
 
