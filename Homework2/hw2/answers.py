@@ -319,20 +319,36 @@ to find a local minimum.
     respect to the model's parameters. The algorithm is based on the chain rule from calculus.
     Back-propagation is typically used in optimization algorithms that require gradients.
 
+In conclusion,
+Gradient Descent is an optimization algorithm that aims to minimize a loss function by iteratively adjusting the model parameters in the direction of the negative gradient. 
+It calculates the gradient of the loss with respect to the parameters over the entire dataset and updates the parameters accordingly. 
+On the other hand, Back-propagation is a technique used to efficiently compute the gradients of the loss function with respect to each parameter in a neural network.
+ It applies the chain rule to propagate the error backward from the output layer to the input layer, 
+ calculating the gradient for each layer. 
+ While Gradient Descent is about the optimization process, Back-propagation is a method for calculating the necessary gradients to perform this optimization.
+ 
+
 2. Gradient Descent (GD) and Stochastic Gradient Descent (SGD) are both optimization techniques used to minimize 
 loss functions by updating model parameters iteratively. 
 In GD, the update rule involves computing the gradient of the loss function with respect to all training data. 
 In contrast, SGD updates the model parameters using the gradient computed from a single randomly selected training example
 at each iteration. The expectation of the noisy gradient updates in SGD is equal to the true gradient in GD,
 allowing SGD to approximate the true gradient direction over many iterations. 
-GD usually has smoother convergence compared to regular SGD, 
-which can be noisy due to the variability introduced by random sampling. 
+SGD, updates the parameters using only a single or a small subset of the training dataset at each iteration, 
+ this results is faster and more computationally efficient updates, but the convergence path can be noisier and less stable than GD.
+While GD has stable and smooth convergence, it can be computationally expensive for large datasets. 
+  therefore ,SGD is preferred for large datasets because it allows for faster updates and can handle datasets that do not fit into memory by processing in smaller batches.
+
+
+
 
 3. Stochastic Gradient Descent (SGD) is widely used in deep learning for several reasons:
 
-    -Gradient Descent (GD) has significant memory and computation demands 
+    -it is computationally efficient, especially for large datasets, because it does not require loading the entire 
+    dataset into memory and it provides faster convergence compared to full-batch Gradient Descent, as updates are made more frequently.
+    (Gradient Descent has significant memory and computation demands 
     since it requires processing the entire dataset for a single optimization step. 
-    This makes it impractical for large datasets.
+    This makes it impractical for large datasets.)
     
     -In Stochastic Gradient Descent (SGD), the error surface is dynamic, 
     changing with each batch of training samples. This variability can enhance 
@@ -345,7 +361,9 @@ which can be noisy due to the variability introduced by random sampling.
     generalization to unseen data.
     
 4.
-4.A. 
+
+A. 
+
 The methods have the same loss output after going through entire dataset:
 Mathematical Justification"
 
@@ -368,42 +386,26 @@ $$
 
 Since all the batches are disjoint sets, where their union is equal to entire S 
 we can deduce that  $L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i) =
-\sum_{j=1}^{N} l(f_\theta(x_i), y_i) = L(\theta)$. 
+\sum_{j=1}^{N} \ell(f_\theta(x_i), y_i) = L(\theta)$. 
 
 If the losses are equivalent, then theoretically we should get the same gradient updates when 
 calculating the gradient with respect to the network parameters. 
 The problem is that we also need to accumulate outputs if we use the chain rule, as we will explain in the next section.
 
-4.B.
-4.A.
 
-The methods have the same loss output after going through the entire dataset:
 
-Let the dataset be $\mathcal{S}$ with size $N$. Split $\mathcal{S}$ into $M$ disjoint batches $\{\mathcal{B}_1, \mathcal{B}_2, \ldots, \mathcal{B}_M\}$ where each batch $\mathcal{B}_j$ contains $N_j$ samples such that $\sum_{j=1}^{M} N_j = N$.
+B.
 
-The total loss over the entire dataset is:
+Even though we are using batch sizes small enough to fit into memory,
+the out-of-memory error likely occurred because of the accumulation of intermediate activations results. 
+When performing multiple forward passes before doing a single backward pass, the intermediate results need to be stored in memory until the backward pass is performed.
+ If you accumulate these intermediate results over many batches without releasing memory, the memory usage can grow significantly, 
+ leading to an out-of-memory error.
+  To avoid this, you should perform backward passes and parameter updates for each batch individually rather than accumulating all batches before updating.
+   This approach ensures that memory is freed up after each batch is processed, 
+   preventing excessive memory usage. 
 
-$$
-L(\theta) = \sum_{i=1}^{N} \ell(f_\theta(x_i), y_i)
-$$
 
-When split into batches, the total loss can be written as the sum of losses for each batch:
-
-$$
-L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i)
-$$
-
-Since all the batches are disjoint sets whose union is equal to the entire dataset $\mathcal{S}$, we can deduce that:
-
-$$
-L_B(\theta) = \sum_{j=1}^{M} \sum_{i \in \mathcal{B}_j} \ell(f_\theta(x_i), y_i) = \sum_{i=1}^{N} \ell(f_\theta(x_i), y_i) = L(\theta)
-$$
-
-If the losses are equivalent, then theoretically we should get the same gradient updates when calculating the gradient
-with respect to the network parameters. 
-The problem is that we also need to accumulate outputs if we use the chain rule, as we will explain in the next section.
-
-4.B.
 
 Even though we are using batch sizes small enough to fit into memory, an out of memory error can occur because 
 when we accumulate the losses from multiple forward passes, the computation graphs for each batch are also accumulated. 
