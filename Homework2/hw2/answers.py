@@ -466,6 +466,29 @@ The algorithm requires storing the intermediate values $v_j$ from the forward pa
 $O(n)$. However we reduced memory savings by factor 2 since we don't need to save all the 'grad' properties for each vertex.
 The computational complexity remains linear, $O(n)$.
 
+A way to reduce the memory in factor $\sqrt(N)$ is called checkpoints.
+**Checkpoints Algorithm*:
+ 1. **Initialization**:
+    - Determine checkpoints at strategic intervals (e.g., every $\sqrt{n}$ steps).
+    - Set $\text{gradient} \leftarrow 1$.
+ 
+ 2. **Forward Pass with Checkpoints**:
+    - For each node $j$ from 0 to $n-1$:
+      - Compute $v_j$ and decide based on the checkpoint strategy whether to store $v_j$.
+      - If $j$ is a checkpoint, store $v_j$.
+ 
+ 3. **Backward Pass Using Checkpoints**:
+    - For each node $j$ from $n-1$ to 0:
+      - If $v_j$ is not stored (not a checkpoint), recompute $v_j$ starting from the nearest previous checkpoint.
+      - Compute $\text{gradient} \leftarrow \text{gradient} \cdot v_{j+1}.fn'.derivative(v_{j}.val)$.
+
+ **Memory and Computational Complexity**:
+ - **Memory Complexity**: The memory complexity is reduced to $O(\sqrt{n})$ if checkpoints are set at every $\sqrt{n}$ 
+ steps. 
+ - **Computational Cost**: The total computational cost remains $O(n)$. Each segment between checkpoints might require
+  recomputation, but the total number of operations does not exceed $n$ significantly due to efficient 
+  checkpoint spacing.
+
 4.3
 In general computational graphs, memory usage is proportional to the amount of memory needed to store 
 intermediate values required to evaluate a node $f_n$. 
