@@ -924,132 +924,121 @@ we can achieve even better results.
 
 
 part6_q1 = r"""
+**Your answer:**
+The model exhibits poor performance in detection and also struggles with some localization issues.
+
 1.1
 
+Detailed explanation:
+
 **Image 1**
-
-
-**Localization Problem:**
-There are actually three dolphins in the image.One dolphin is classified correctly.
-Two of them are close together, which might have confused the model,
-resulting in a single bounding box covering both dolphins. 
-One of the dolphin's tail of the merged dolphins is detected as a separate object.
-
-**Detection Performance:**
-
-The detection performance is poor. The model incorrectly identified:
+- **Localization:**
+There are actually three dolphins in the image. Two of them are close together, which might have confused the model, 
+resulting in a single bounding box covering both dolphins. The third dolphin's tail is detected as a separate object.
+- **Detection**
+- The detection performance is poor. The model incorrectly identified:
   - Two dolphins as "person" with confidence scores of $0.53$ and $0.90$.
   - The tail of a dolphin as a "surfboard" with a confidence score of $0.37$.
+- The model is quite confident ($90\%$) about one of its incorrect predictions, indicating a significant detection error.
 
 **Image 2**
+- *Localization*
+- The model localized three objects(the dogs) but failed to detect the cat.
 
-**Localization:**
-- The model localized three dogs but failed to detect one of the cats entirely.
-
-**Detection Performance:**
+- **Detection**
 - The model made the following predictions:
   - Two dogs were labeled as "cat" with confidence scores of $0.65$ and $0.39$.
-  - The actual dog was labeled correctly but with a low confidence score of $0.50$.
+  - The third dog was labeled correctly but with a low confidence score of $0.50$.
 - The model's predictions show confusion between cats and dogs, indicating issues with the classification performance.
 
 1.2
-
 **Failure Reasons for the First Image**
-The model fails because "dolphin" is not a class in the YOLOv5 model's 
-training data, causing it to mislabel the dolphins as other classes.
-In addition, the low resolution and tricky lighting conditions at sunset might also influenced the .
-the model ability to correctly identify and localize objects. 
-It's likely that the model hasn't been trained on enough images in similar lighting conditions. 
-Also, there might be a bias in the training data towards pictures of people surfing at sunset,
-leading the model to wrongly label dolphins as people and surfboards. 
-Regarding the problem of mislocalizing the two dolphins, 
-it may be related to the black shadow that merges the objects, 
-making it difficult for the model to distinguish between them.
+ the model fails because "dolphin" is not a class in the YOLOv5 model's training data, 
+ causing it to mislabel the dolphins as other classes. 
+ Regarding the problem of mislocalizing the two dolphins, it may be related to the black shadow that merges the objects, 
+ making it difficult for the model to distinguish between them.
+ Moreover,it's likely that the model hasn't been trained on enough dolphin images,
+especially those taken in similar lighting conditions. Also, there might be a bias in the training data
+towards pictures of people surfing at sunset, leading the model to wrongly label dolphins as people and surfboards.
+
 
 **Failure Reasons for the Second Image**
-In the second image, even though the resolution is better,
-the model still struggles with classification. 
-It confuses dogs for cats, probably because of the dogs' cat-like ear shapes and poses. 
+In the second image, even though the resolution is better, the model still struggles with classification.
+It confuses dogs for cats, probably because of the dogs' cat-like ear shapes and poses.
 This suggests that the model hasn't seen enough examples of these variations in the training data.
-The poses of the dogs  also might be confusing the model,
-causing these incorrect classifications.
-Additionally, the model completely misses detecting one of the cats.
-This could be due to how anchor boxes are used in YOLOv5.
-YOLOv5 uses anchor boxes to predict bounding boxes around objects.
-Anchor boxes are pre-defined boxes with specific heights and widths
-that the model uses as a reference.
-If these predefined anchor boxes don't match the sizes and shapes of the objects
-in the image well, the model might have trouble detecting them.
-This mismatch can lead to missed objects or inaccurate localization.
-By optimizing these anchor boxes to better fit the objects in the training data,
-the model's performance can be improved.
+The unusual poses and features of the dogs might be confusing the model, causing these incorrect classifications.
+Additionally, the model completely misses detecting one of the cats. This could be due to how anchor
+ boxes are used in YOLOv5.
+YOLOv5 uses anchor boxes to predict bounding boxes around objects. Anchor boxes are pre-defined boxes with specific 
+heights and widths that the model uses as a reference. If these predefined anchor boxes don't match the sizes 
+and shapes of the objects in the image well, the model might have trouble detecting them. 
+This mismatch can lead to missed objects or inaccurate localization. By optimizing these anchor boxes to better
+fit the objects in the training data, the model's performance can be improved.
 
-**Solutions to Address Model Issues**
-To address these issues, we need to improve the training dataset with a wider variety of images.
-This means adding more pictures of dolphins in different lighting conditions and dogs with 
-various ear shapes and poses.
-Using data augmentation techniques can also help make the training data more diverse.
-For the first image, increasing the contrast between the two dolphins can help the model
-distinguish them better. Additionally, optimizing anchor boxes by analyzing the dataset can
-ensure they better match the size and shapes of the objects in the images.
-This involves checking the training data to find the most common object sizes and
-shapes and adjusting the anchor boxes accordingly.
-Refining how the bounding boxes are set up can also help the model detect
-and localize objects more accurately.
-Using more bounding boxes per grid cell can also improve the detection of
-objects with varying sizes and shapes, further enhancing the model's performance.
-Finally, adding a custom class for dolphins and retraining the model with a more diverse and
-comprehensive dataset would help in accurately detecting dolphins.
+**Solutions***
+To address these issues, we need to improve the training dataset with a wider variety of images. 
+This means adding more pictures of dolphins in different lighting conditions and dogs with various ear shapes and poses.
+ Using data augmentation techniques can also help make the training data more diverse.
+  For the first image, increasing the contrast between the two dolphins can help the model distinguish them better. 
+  Additionally, optimizing anchor boxes by analyzing the dataset can ensure they better match the size and shapes of 
+  the objects in the images. This involves checking the training data to find the most common object sizes and shapes 
+  and adjusting the anchor boxes accordingly. Refining how the bounding boxes are set up can also help the model 
+  detect and localize objects more accurately. Using more bounding boxes per grid cell can also 
+  improve the detection of objects with varying sizes and shapes, further enhancing the model's performance. 
+  Finally, we should the model on more classes like dolphin.
 
 1.3
-
-Using Projected Gradient Descent (PGD), we can generate adversarial examples that
-target YOLO's loss.
-The process involves adding small perturbations to the input image,
-calculating the gradient of the targeted loss function (classification, confidence,
-localization or combination of them), and iteratively
-updating the perturbation to maximize the loss. By projecting the perturbed image back
-into the valid input space to keep changes realistic, we create adversarial images that cause
-the model to misclassify objects, alter bounding box coordinates, miss objects entirely,
-or detect nonexistent objects. This method disrupts the model's performance while keeping
-the adversarial changes imperceptible to human observers.
+Using Projected Gradient Descent (PGD), we can generate adversarial examples that target YOLO's classification, 
+localization, and confidence predictions. The process involves adding small perturbations to the input image,
+calculating the gradient of the targeted loss function (classification, localization, confidence losses,
+or a combination), and iteratively updating the perturbation to maximize the loss. 
+By projecting the perturbed image back into the valid input space to keep changes realistic, we create adversarial 
+images that cause the model to misclassify objects, alter bounding box coordinates, 
+miss objects entirely, or detect nonexistent objects. This method disrupts the model's performance while
+keeping the adversarial changes imperceptible to human observers.
 """
-
 
 part6_q2 = r"""
 **Your answer:**
+
+
 Write your answer using **markdown** and $\LaTeX$:
 ```python
 # A code block
 a = 2
 ```
 An equation: $e^{i\pi} -1 = 0$
+
 """
 
-
 part6_q3 = r"""
-**Picture 1: Cluttered Background**
+**Your answer:**
 
-**Description:** A cluttered bookshelf with many overlapping dolls and books.
-**Inference Results:**
-The detector identified 18 books and incorrectly identified a person’s hand as a person.
-It failed to detect any of the dolls, likely due to the high number of objects and clutter.
+Picture 1: Cluttered Background
+
+Description: A cluttered bookshelf with many overlapping dolls and books.
+
+Inference Results: The detector identified 18 books and incorrectly identified a person’s hand as a person. 
+It failed to detect any of the dolls, likely due to the high number of objects and clutter. 
 Even among the books, some were missed, and the model's confidence in its detections was low.
 
-**Picture 2: Partial Occlusion and Model Bias**
+Picture 2: Partial Occlusion and Model Bias
 
-**Description:** A book is photographed at an angle with parts of it excluded.
-**Inference Results:** The model misclassified the book as a laptop.
-This indicates a bias where the model associates certain angles with laptops and expects books
-to be in specific orientations and fully visible for correct classification.
+Description: A book is photographed at an angle, with parts of it excluded.
 
-**Picture 3: Illumination Conditions and Partial Occlusion**
+Inference Results: The model misclassified the book as a laptop, indicating a bias. 
+The model seems to associate certain angles with laptops and expects books to 
+be in specific orientations and fully visible to classify them correctly. 
+In a previous example, books in a library setting were correctly identified due to the context and orientation.
 
-**Description:** The image is taken in a dark room with poor lighting.
-**Inference Results:** The detector failed to identify the table due to the poor lighting,
-making it difficult to distinguish objects.
-It misclassified the laundry hanger as a chair, likely because the model hasn't been trained on
-laundry hangers. The couch was also poorly localized due to the lighting conditions.
+Picture 3: Illumination Conditions and Partial Occlusion
+
+Description: The image is taken in a dark room with poor lighting.
+
+Inference Results: The detector failed to identify the table due to the poor
+ lighting, making it difficult to distinguish objects. It misclassified the laundry hanger as a chair,
+ which is reasonable due to the fact the model doesnt classify laundry hanger.
+ The couch was also poorly localized due to the lighting conditions.
 """
 
 part6_bonus = r"""
