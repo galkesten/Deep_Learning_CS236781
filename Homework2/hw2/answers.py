@@ -1029,13 +1029,20 @@ laundry hangers. The couch was also poorly localized due to the lighting conditi
 
 part6_bonus = r"""
 **Your answer:**
+For the partial photo, we flipped the image 180 degrees and received a correct prediction
+(book) with low confidence.
+This strengthens our observation that the model has a bias regarding the angle of the photo when distinguishing between
+a computer and a book.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+For the other photos, we couldn't resolve the issues.
+
+1. **Cluttered Background**: The model fails to recognize the dolls as objects.
+Even when we photographed a single doll, the model did not recognize it.
+
+2. **Dark Photo**: We attempted to lighten the background but were unsuccessful
+in both recognizing the table and maintaining accurate recognition of the couch.
+Additionally, the model kept misclassifying the table as a chair or oven.
+We believe that lightening the photo introduced a lot of noise, further confusing the model.
 
 """
