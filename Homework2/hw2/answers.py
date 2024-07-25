@@ -992,40 +992,39 @@ the adversarial changes imperceptible to human observers.
 
 
 part6_q2 = r"""
-Picture 1: Cluttered Background
-**Description:** A cluttered bookshelf with many overlapping dolls and books.
-**Inference Results: **
-The detector identified 18 books and incorrectly identified a person’s hand as a person.
-It failed to detect any of the dolls, likely due to the high number of objects and clutter.
-Even among the books, some were missed, and the model's confidence in its detections was low.
-
-Picture 2: Partial Occlusion and Model Bias
-**Description:** A book is photographed at an angle with parts of it excluded.
-**Inference Results:** The model misclassified the book as a laptop.
-This indicates a bias where the model associates certain angles with laptops and expects books
-to be in specific orientations and fully visible for correct classification.
-
-Picture 3: Illumination Conditions and Partial Occlusion
-**Description:** The image is taken in a dark room with poor lighting.
-**Inference Results:** The detector failed to identify the table due to the poor lighting,
-making it difficult to distinguish objects.
-It misclassified the laundry hanger as a chair, likely because the model hasn't been trained on
-laundry hangers. The couch was also poorly localized due to the lighting conditions.
-
-"""
-
-
-part6_q3 = r"""
 **Your answer:**
-
-
 Write your answer using **markdown** and $\LaTeX$:
 ```python
 # A code block
 a = 2
 ```
 An equation: $e^{i\pi} -1 = 0$
+"""
 
+
+part6_q3 = r"""
+**Picture 1: Cluttered Background**
+
+**Description:** A cluttered bookshelf with many overlapping dolls and books.
+**Inference Results:**
+The detector identified 18 books and incorrectly identified a person’s hand as a person.
+It failed to detect any of the dolls, likely due to the high number of objects and clutter.
+Even among the books, some were missed, and the model's confidence in its detections was low.
+
+**Picture 2: Partial Occlusion and Model Bias**
+
+**Description:** A book is photographed at an angle with parts of it excluded.
+**Inference Results:** The model misclassified the book as a laptop.
+This indicates a bias where the model associates certain angles with laptops and expects books
+to be in specific orientations and fully visible for correct classification.
+
+**Picture 3: Illumination Conditions and Partial Occlusion**
+
+**Description:** The image is taken in a dark room with poor lighting.
+**Inference Results:** The detector failed to identify the table due to the poor lighting,
+making it difficult to distinguish objects.
+It misclassified the laundry hanger as a chair, likely because the model hasn't been trained on
+laundry hangers. The couch was also poorly localized due to the lighting conditions.
 """
 
 part6_bonus = r"""
