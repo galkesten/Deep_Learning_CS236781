@@ -623,14 +623,31 @@ based on the differing costs and risks associated with FPs and FNs in each case.
 
 part3_q4 = r"""
 **Your answer:**
+An MLP is not ideal for training on sequential
+data such as text, where each data point is a word, and the goal is to
+classify the sentiment of a sentence.
+The main reason is that MLPs process inputs independently without considering
+the order in which they appear. An MLP gets one input at a time and lacks memory,
+making it problematic to handle sequential data.
 
+One potential solution is to average all the word embeddings together,
+but this approach loses the positional information of the words.
+Consequently, sentences containing the same words in different orders would be
+indistinguishable, leading to confusion in the model. For example,
+the sentences "I am not happy" and "I am happy not" would appear the same
+to the MLP if their word embeddings are averaged, despite having different
+sentiments.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+Another approach could be to concatenate the word embeddings to create a
+single input vector for the MLP. However, this has significant disadvantages.
+The resulting vectors can become excessively long, which increases the
+computational complexity and the risk of overfitting. Additionally,
+this method imposes a limit on the size of the sentences that can be processed,
+as the input size for the MLP needs to be fixed,
+necessitating either truncation of longer sentences or padding of
+shorter ones, both of which can lead to loss of information or
+inclusion of irrelevant data.
+
 
 """
 # ==============
