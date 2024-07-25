@@ -601,14 +601,22 @@ resulting in a higher FNR.
 
 part3_q3 = r"""
 **Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+The choice of the "optimal" point on the ROC curve for screening a
+large cohort of patients for a disease depends on the specific consequences of
+false positives (FP) and false negatives (FN). In the first scenario,
+where a person with the disease will develop non-lethal symptoms that confirm the
+diagnosis and can then be treated,
+it is crucial to minimize the False Positive Rate (FPR) to avoid unnecessary
+high-cost and high-risk tests, even if it means a moderate increase in the
+False Negative Rate (FNR), as these patients will eventually be diagnosed
+when symptoms appear. Conversely, in the second scenario,
+where a person with the disease shows no clear symptoms and may die
+with high probability if not diagnosed early enough, the priority shifts to
+maximizing the True Positive Rate (TPR) to ensure early detection and treatment,
+thus reducing the risk of death, even if it results in a higher FPR.
+Therefore, the optimal point on the ROC curve varies: it should favor a lower
+FPR in the first scenario and a higher TPR in the second,
+based on the differing costs and risks associated with FPs and FNs in each case.
 
 """
 
