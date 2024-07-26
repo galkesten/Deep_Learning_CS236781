@@ -406,17 +406,6 @@ When performing multiple forward passes before doing a single backward pass, the
    preventing excessive memory usage. 
 
 
-
-Even though we are using batch sizes small enough to fit into memory, an out of memory error can occur because 
-when we accumulate the losses from multiple forward passes, the computation graphs for each batch are also accumulated. 
-This means memory usage grows with each batch processed until it exceeds the available memory.
-
-We cannot clear the outputs because we are using the backpropagation algorithm, which requires the computational graph 
-along the way. This method treats the data as if it was actually calculated together in a single forward pass, 
-therefore requiring all outputs for gradient calculations. To compute the gradients correctly using the chain rule, 
-we need to retain the entire computation graph until the backward pass is complete.
-
-
 """
 
 part2_q4 = r"""
@@ -535,21 +524,41 @@ part3_q1 = r"""
 
 **High  Optimization error:**
 
-High Optimization error occurs when the training process fails to sufficiently minimize the loss function on the training data.
-Neural networks often have highly non-convex loss surfaces, making it challenging to find the global optimum.
-Issues such as vanishing gradients, varying rates of convergence in different dimensions, 
-and dependency on initialization can contribute to high optimization error.
-
+High optimization error occurs when the model is unable to minimize the training loss effectively. 
+This indicates that the model is not fitting the training data well, which can be due to poor optimization techniques, 
+an insufficiently complex model, or issues inherent to the training process. In addition, neural networks often have highly non-convex loss surfaces, 
+making it challenging to find the global optimum. Issues such as vanishing gradients, varying rates of convergence in different dimensions,
+ and dependency on initialization can also contribute to high optimization error.
+ 
 Solutions proposed during course:
-- Advanced Optimizers: Utilize optimization algorithms such as SGD with Momentum, Adam, or RMSprop to enhance convergence rates and stability.
-- Learning Rate Scheduling: Reduce the learning rate every few epoches
+1. Learning Rate Adjustment:
+- Use an appropriate learning rate: Too high a learning rate can cause the model to overshoot minima, while too low can lead to slow convergence.
+- Learning Rate Scheduling: Reduce the learning rate every few epochs to improve convergence.
 - Warmups: Gradually increase the learning rate at the start of training to stabilize initial updates.
-- Proper Weight Initialization: Use advanced initialization methods like Xavier initialization
- to set effective starting points for the weights.
+2. Advanced Optimization Algorithms:
+- Adam, RMSprop, or AdaGrad: These optimizers adapt the learning rate and handle sparse gradients more effectively than standard gradient descent.
+- SGD with Momentum: Enhances convergence rates and stability by accelerating the gradient vectors in the right directions.
+3. Receptive Field:
+- Increase the receptive field: with larger receptive fields, neurons can extract more relevant and comprehensive features from the input data,
+this means the model can learn more effectively from the training data, leading to better fitting and reduced optimization error.
+This reduces issues like vanishing gradients, which can hinder the optimization process.
+4. Regularization Techniques:
+- L2 Regularization (Weight Decay): Helps to prevent overfitting and improve the model's ability to optimize effectively.
+- Dropout: Another regularization technique to prevent overfitting by randomly dropping units during training.
+5. Hyperparameter Tuning:
+- Experiment with different hyperparameters such as batch size, learning rate schedules, and network architecture to find the optimal configuration.
+6. Proper Weight Initialization:
+- Xavier Initialization: Use advanced initialization methods like Xavier or He initialization to set effective starting points for the weights, which helps in achieving faster and more stable convergence.
+7. Normalization:
+- Batch Normalization: Stabilize and accelerate training by normalizing the inputs of each layer, 
+which helps in maintaining consistent gradient behavior across different axes.
 - Preprocessing Data: Normalize and preprocess data to ensure consistent gradient behavior across different axes. 
-    We can also use batch normalization techniques to learn how to best normalize the data.
-- Skip Connections: Introduce skip connections (e.g., as in ResNet) to mitigate vanishing gradients.
-
+This can include standardization, normalization, and using techniques like batch normalization.
+8. Skip Connections:
+- Introduce skip connections (e.g., as in ResNet) to mitigate vanishing gradients and ensure better gradient flow during backpropagation.
+ 
+ 
+ 
 **High Generalization Error:**
 
 High Generalization error arises when the model performs well on the training data but poorly on unseen data. 
@@ -570,8 +579,9 @@ Solutions proposed during course:
 
 **High approximation Error:**
 
-Approximation error occurs when the chosen hypothesis class H is not expressive enough to capture
+Approximation error occurs when the chosen hypothesis class H is not expressive enough (the model is too simple) to capture
 the underlying patterns in the data. 
+This indicates underfitting, where the model lacks the capacity to learn the complexity of the data. 
 
 Solutions proposed during course:
 
@@ -581,21 +591,34 @@ Solutions proposed during course:
 - Receptive Field Adjustments: In CNNs, increasing the receptive field as we go deeper in the network allows each layer
 to capture features at different levels of abstraction, reducing approximation error by enabling
 the model to learn more complex patterns.
+- Feature Engineering: Create more informative features that capture the underlying patterns in the data. 
+This can involve domain knowledge and techniques like polynomial features or interaction terms
 
 """
 
 part3_q2 = r"""
 **Your answer:**
-We expect the FPR to be higher when the ratio between positive labels and negative labels in the 
-training dataset does not approximate the real-life ratio. For example, in email spam detection, if we use more spam 
-emails than there are in real life to expose the model to many spam samples, 
-the classifier may become overly sensitive, leading to a higher FPR.
 
-Conversely, we expect the FNR to be higher when the ratio between positive labels (e.g., disease cases) and negative 
-labels (e.g., healthy cases) in the training dataset does not reflect the real-life ratio. 
-This can occur in cases where positive samples are hard to obtain, such as rare diseases. 
-The lack of sufficient positive examples can prevent the classifier from learning to detect them effectively,
-resulting in a higher FNR.
+**False Positive Rate (FPR):** 
+The proportion of negative instances that are incorrectly classified as positive.
+$$
+\text{FPR} = \frac{\text{False Positive (FP)}}{\text{False Positive (FP)} + \text{True Negative(TN)}}
+$$
+**False Negative Rate (FNR):**
+The proportion of positive instances that are incorrectly classified as negative.
+$$
+\text{FNR} = \frac{\text{False Negative (FN)}}{\text{False Negative (FN)} + \text{True Positive(TP)}}
+$$
+
+We expect a higher FPR when the ratio of positive to negative labels in the training dataset does not approximate the real-life ratio. 
+For example, in email spam detection, using more spam emails than usual can make the classifier overly sensitive, 
+leading to more legitimate emails being marked as spam (higher FPR). 
+Additionally, setting a low decision threshold to avoid missing any spam (high cost of false negatives) further increases the FPR.
+
+We expect a higher FNR when the ratio of positive to negative labels does not reflect real-life proportions, 
+such as in disease detection with rare diseases. 
+The scarcity of positive samples prevents the classifier from learning to detect them effectively, resulting in a higher FNR.
+Additionally, setting a high decision threshold to avoid false positives (high cost of false positives) can lead to missing actual positive cases, further increasing the FNR.
 
 """
 
