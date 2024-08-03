@@ -118,17 +118,23 @@ def chars_to_labelled_samples(text: str, char_to_idx: dict, seq_len: int, device
     #  3. Create the labels tensor in a similar way and convert to indices.
     #  Note that no explicit loops are required to implement this function.
     # ====== YOUR CODE: ======
-    r = (len(text) - 1) % seq_len
-    if r!= 0:
-        text = text[:-r]
-    text_without_last_char = text[:-1]
-    N = (len(text)-1) // seq_len
-    embedded_text = chars_to_onehot(text_without_last_char, char_to_idx) # we got a matrix where each row is one character embedded in dim V
-    embedded_shape = embedded_text.shape
+    # Number of full samples we can extract
+    # Number of full samples we can extract
+    N = (len(text) - 1) // seq_len
+    S = seq_len
+    V = len(char_to_idx)
+
+    # Trim the text to fit full samples
+    trimmed_text = text[:N * S + 1]  # include one extra for labels
+
+    # Embed the trimmed text except the last character
+    embedded_text = chars_to_onehot(trimmed_text[:-1],
+                                    char_to_idx)  # we got a matrix where each row is one character embedded in dim V
     # We want to group every s rows to an array
-    samples = embedded_text.view((N,seq_len,embedded_shape[0])).to(device)
-    shifted_indices_str = [char_to_idx[c] for c in text[1:] if c in char_to_idx]
-    labels = torch.tensor(shifted_indices_str).view((N,seq_len)).to(device)
+    samples = embedded_text.view((N, S, V)).to(device)
+    # Prepare labels: indices of the next characters in the sequence
+    shifted_indices_str = [char_to_idx[c] for c in trimmed_text[1:] if c in char_to_idx]
+    labels = torch.tensor(shifted_indices_str).view((N, S)).to(device)
     # ========================
     return samples, labels
 
