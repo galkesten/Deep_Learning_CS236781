@@ -93,9 +93,29 @@ class Trainer(abc.ABC):
             #  - Implement early stopping. This is a very useful and
             #    simple regularization technique that is highly recommended.
             # ====== YOUR CODE: ======
-            
-            raise NotImplementedError()
+            #train epoch
+            train_result = self.train_epoch(dl_train, verbose=verbose, **kw)
+            train_loss.extend(train_result.losses)
+            train_acc.append(train_result.accuracy)
+            # train test
+            test_result = self.test_epoch(dl_test, verbose=verbose, **kw)
+            test_loss.extend(test_result.losses)
+            test_acc.append(test_result.accuracy)
 
+            actual_num_epochs += 1
+
+            #early stopping
+            if best_acc is None or test_result.accuracy > best_acc:
+                # ====== YOUR CODE: ======
+                epochs_without_improvement = 0
+                best_acc = test_result.accuracy
+                save_checkpoint = True
+                # ========================
+            else:
+                # ====== YOUR CODE: ======
+                epochs_without_improvement += 1
+                if early_stopping is not None and epochs_without_improvement >= early_stopping:
+                    break
             # ========================
 
             # Save model checkpoint if requested
