@@ -1,4 +1,3 @@
-import re
 import torch
 import torch.nn as nn
 import torch.utils.data
@@ -151,7 +150,8 @@ def hot_softmax(y, dim=0, temperature=1.0):
     """
     # TODO: Implement based on the above.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    scaled = y/temperature if temperature !=0 else temperature
+    result = torch.softmax(scaled, dim=dim)
     # ========================
     return result
 
@@ -174,7 +174,6 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     device = next(model.parameters()).device
     char_to_idx, idx_to_char = char_maps
     out_text = start_sequence
-
     # TODO:
     #  Implement char-by-char text generation.
     #  1. Feed the start_sequence into the model.
@@ -187,7 +186,29 @@ def generate_from_model(model, start_sequence, n_chars, char_maps, T):
     #  necessary for this. Best to disable tracking for speed.
     #  See torch.no_grad().
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    #embedded_x0 = chars_to_onehot(start_sequence, char_to_idx) #(N,D) where N is sequence length and D is embedded dim
+    #embedded_x0 = embedded_x0.view(1, len(start_sequence),-1) #(1,N,D) 1 batch, N sequence length and D is embedded dim for input
+    #y, h = model(embedded_x0.to(dtype=torch.float, device=device)) # y (1,N,D) 1 batch, N sequence length and O is embedded dim for output. h is (1,L,H). 1 for batch, 3 for 3 layers and H is dimension of memory
+    #output_for_word_generation = y[:,-1,:]
+    #first_char_generation_distribution= hot_softmax(output_for_word_generation,dim=-1,temperature=T) #each row in the output has column for each possible char
+    #first_char_idx = torch.multinomial(first_char_generation_distribution, num_samples=1)
+    #out_text+=idx_to_char[first_char_idx.item()]
+
+    str_input=start_sequence
+    hidden_state=None
+    with torch.no_grad():
+        for i in range(n_chars-len(start_sequence)):
+            embedded_input = chars_to_onehot(str_input, char_to_idx)
+            embedded_input = embedded_input.unsqueeze(0)
+            y, h = model(embedded_input.to(dtype=torch.float, device=device), hidden_state)
+            output_for_word_generation = y[:, -1, :]
+            distribution =  hot_softmax(output_for_word_generation,dim=-1,temperature=T)
+            char_idx = torch.multinomial(distribution, num_samples=1)
+            generated_char = idx_to_char[char_idx.item()]
+            out_text+=generated_char
+
+            str_input= generated_char
+            hidden_state = h
     # ========================
 
     return out_text
@@ -220,7 +241,12 @@ class SequenceBatchSampler(torch.utils.data.Sampler):
         #  you can drop it.
         idx = None  # idx should be a 1-d list of indices.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        num_batches = len(self.dataset) // self.batch_size
+        data_set_size = num_batches*self.batch_size
+        array = torch.arange(0, data_set_size)
+        batches_as_matrix = array.view(-1, num_batches).t()
+        idx = batches_as_matrix.reshape(data_set_size).tolist()
+
         # ========================
         return iter(idx)
 
@@ -254,8 +280,26 @@ class MultilayerGRU(nn.Module):
         # TODO: READ THIS SECTION!!
 
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        for i in range(n_layers):
+           curr_layer_params = {}
+
+           input_dim = self.in_dim if i == 0 else self.h_dim
+           curr_layer_params["wxz"] = nn.Linear(input_dim, h_dim, bias=False)
+           curr_layer_params["whz"] =  nn.Linear(h_dim, h_dim, bias=True)
+           curr_layer_params["wxr"] = nn.Linear(input_dim, h_dim, bias=False)
+           curr_layer_params["whr"] = nn.Linear(h_dim, h_dim, bias=True)
+           curr_layer_params["wxg"] = nn.Linear(input_dim, h_dim, bias=False)
+           curr_layer_params["whg"] = nn.Linear(h_dim, h_dim, bias=True)
+
+           self.layer_params.append(curr_layer_params)
+
+           for param_name, layer in curr_layer_params.items():
+               self.add_module(f"{i}_{param_name}", layer)
+
+        self.dropout = nn.Dropout(p=dropout)
+        self.why = nn.Linear(h_dim, self.out_dim, bias=True)
         # ========================
+
 
     def forward(self, input: Tensor, hidden_state: Tensor = None):
         """
@@ -274,14 +318,16 @@ class MultilayerGRU(nn.Module):
         """
         batch_size, seq_len, _ = input.shape
 
-        layer_states = []
+        layer_states = [] #if we look at the picture we can see each layer get as input: h_t(k) which is related to the input element entered in time k
+        #it also uses memory ht-1(k) i.e a memory of that specific layer
         for i in range(self.n_layers):
-            if hidden_state is None:
+            if hidden_state is None: # if no initial hidden states are gives, just init with zeros
                 layer_states.append(
                     torch.zeros(batch_size, self.h_dim, device=input.device)
                 )
             else:
-                layer_states.append(hidden_state[:, i, :])
+                layer_states.append(hidden_state[:, i, :]) #hidden states has size (B,L,H). this line will take for us row i on the entire cube which
+                #is ok because it will take the hidden state for the entire batch. we insert (B,H) to the array
 
         layer_input = input
         layer_output = None
@@ -289,13 +335,13 @@ class MultilayerGRU(nn.Module):
         # TODO: READ THIS SECTION!!
         # ====== YOUR CODE: ======
         # Loop over layers of the model
-        for layer_idx in range(self.n_layers):
-            wxz = self.layer_params[layer_idx]["wxz"]
-            whz = self.layer_params[layer_idx]["whz"]
-            wxr = self.layer_params[layer_idx]["wxr"]
-            whr = self.layer_params[layer_idx]["whr"]
-            wxg = self.layer_params[layer_idx]["wxg"]
-            whg = self.layer_params[layer_idx]["whg"]
+        for layer_idx in range(self.n_layers): #we are looping on layers! so each iteration we are processing entire sequence for layer i
+            wxz = self.layer_params[layer_idx]["wxz"]  #update gate
+            whz = self.layer_params[layer_idx]["whz"] #update gate
+            wxr = self.layer_params[layer_idx]["wxr"] #reset gate
+            whr = self.layer_params[layer_idx]["whr"] #reset gate
+            wxg = self.layer_params[layer_idx]["wxg"] #candidate hidden state
+            whg = self.layer_params[layer_idx]["whg"] #candidate hidden state
 
             h_t = layer_states[layer_idx]  # (B, H)
             layer_outputs = []
@@ -304,8 +350,8 @@ class MultilayerGRU(nn.Module):
             for seq_idx in range(seq_len):
                 x_t = layer_input[:, seq_idx, :]  # (B, V) or (B, H)
 
-                z_t = torch.sigmoid(wxz(x_t) + whz(h_t))
-                r_t = torch.sigmoid(wxr(x_t) + whr(h_t))
+                z_t = torch.sigmoid(wxz(x_t) + whz(h_t)) #role-percentage how much to save from original memory versus new candidate memory
+                r_t = torch.sigmoid(wxr(x_t) + whr(h_t)) #role-percentage how much to save from the original memory in the new candidate memory
                 g_t = torch.tanh(wxg(x_t) + whg(r_t * h_t))
                 h_t = z_t * h_t + (1 - z_t) * g_t
 
