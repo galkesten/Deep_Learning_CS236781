@@ -241,7 +241,6 @@ class RNNTrainer(Trainer):
         x = x.to(self.device, dtype=torch.float)  # (B,S,V)
         y = y.to(self.device, dtype=torch.long)  # (B,S)
         seq_len = y.shape[1]
-
         # TODO:
         #  Train the RNN model on one batch of data.
         #  - Forward pass
@@ -250,7 +249,20 @@ class RNNTrainer(Trainer):
         #  - Update params
         #  - Calculate number of correct char predictions
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        if self.hidden_state is not None:
+            self.hidden_state = self.hidden_state.detach()
+
+        y_pred, self.hidden_state = self.model(x, self.hidden_state)  # we got y (B,S,O). h (B,L,H).
+        y_pred = y_pred.transpose(1,2)  # shape (B,O,S). for each matrix in the batch , each column is logits got one sample which is a char on a sequence
+        loss = self.loss_fn(y_pred, y)
+        # Backward pass
+        self.optimizer.zero_grad()
+        loss.backward()
+        # Update parameters
+        self.optimizer.step()
+
+        predicted_chars = torch.argmax(y_pred, dim=1, keepdim=False)  # y_pred is (B,O,S). we calc max on each column. we are left with (B,S)
+        num_correct = (predicted_chars == y).sum()
         # ========================
 
         # Note: scaling num_correct by seq_len because each sample has seq_len
@@ -270,7 +282,12 @@ class RNNTrainer(Trainer):
             #  - Loss calculation
             #  - Calculate number of correct predictions
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            y_pred, self.hidden_state = self.model(x, self.hidden_state)  # we got y (B,S,O). h (B,L,H).
+            y_pred = y_pred.transpose(1,2)  # shape (B,O,S). for each matrix in the batch , each column is logits got one sample which is a char on a sequence
+            loss = self.loss_fn(y_pred, y)
+
+            predicted_chars = torch.argmax(y_pred, dim=1, keepdim=False)  # y_pred is (B,O,S). we calc max on each column. we are left with (B,S)
+            num_correct = (predicted_chars == y).sum()
             # ========================
 
         return BatchResult(loss.item(), num_correct.item() / seq_len)
