@@ -30,7 +30,7 @@ def part1_rnn_hyperparams():
         dropout=0.1,
         learn_rate=0.001,
         lr_sched_factor=0.1,
-        lr_sched_patience=5,
+        lr_sched_patience=3,
     )
     # ========================
     return hypers
