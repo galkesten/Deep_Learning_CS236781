@@ -25,9 +25,9 @@ def part1_rnn_hyperparams():
     hypers = dict(
         batch_size=128,
         seq_len=64,
-        h_dim=256,
-        n_layers=2,
-        dropout=0.2,
+        h_dim=512,
+        n_layers=3,
+        dropout=0.1,
         learn_rate=0.001,
         lr_sched_factor=0.1,
         lr_sched_patience=5,
