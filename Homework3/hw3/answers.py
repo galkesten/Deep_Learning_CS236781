@@ -110,7 +110,18 @@ many characters share similar distributions, so the output may become too random
 (since each character is sampled based on the distribution).
 
 
-2. 
+2.When the temperature is set very high, the effect on the softmax function is to make the output probability
+distribution more uniform. This happens because a high temperature effectively diminishes
+the differences between the logits that are input to the softmax function.
+The model becomes less able to distinguish between more likely and less likely outcomes. 
+This can lead to less coherent or meaningful outputs, as the model does not strongly
+prefer more probable predictions based on the training data.
+
+3.When the temperature is very low the softmax distribution becomes very "peaky,"
+with the probability mass concentrated on one or very few logits that have the highest values.
+As a result, the model's output becomes more deterministic, with the most likely
+outcomes chosen frequently. This can lead to more predictable and reliable output, 
+but it may also cause the output to repeat itself often.
 """
 # ==============
 
