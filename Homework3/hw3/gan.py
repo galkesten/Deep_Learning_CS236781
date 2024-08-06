@@ -20,8 +20,33 @@ class Discriminator(nn.Module):
         #  You can then use either an affine layer or another conv layer to
         #  flatten the features.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
+        C, H, W = in_size
+
+        # Ensure input size is a power of 2
+        assert H == W and ((H & (H - 1)) == 0) and H != 0, "Height and Width must be powers of 2 and equal."
+
+        # Calculate the number of layers needed, minus 2 since we want to go to 4x4
+        n_layers = int(np.log2(H))-2
+
+        # Initial number of filters and filter size
+        kernel_size = 4
+        stride = 2
+        padding = 1
+
+        # Define the convolutional layers
+        layers = []
+        in_channels = C
+        out_channels = 64
+        for i in range(n_layers):  # -1 to ensure the last layer has 1x1 output
+            layers.append(nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding))
+            if i != 0:  # No BatchNorm on the first layer
+                layers.append(nn.BatchNorm2d(out_channels))
+            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            in_channels = out_channels
+            out_channels *= 2
+
+        layers.append(nn.Conv2d(in_channels, 1, kernel_size=kernel_size, stride=1, padding=0))
+        self.cnn = nn.Sequential(*layers)
 
     def _calc_num_cnn_features(self, in_shape):
         with torch.no_grad():
@@ -39,7 +64,8 @@ class Discriminator(nn.Module):
         #  No need to apply sigmoid to obtain probability - we'll combine it
         #  with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        y = self.cnn(x)
+        y= y.view(x.size(0), -1)
         # ========================
         return y
 
@@ -61,7 +87,42 @@ class Generator(nn.Module):
         #  section or implement something new.
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        assert(featuremap_size > 0 and (
+                    featuremap_size & (featuremap_size - 1)) == 0), "featuremap_size must be a power of 2"
+
+        self.z_dim = z_dim
+        self.featuremap_size = featuremap_size
+        self.out_channels = out_channels
+        self.final_image_size = 64  # Assuming fixed final image size of 64x64
+
+        # Calculate the number of upsampling layers needed
+        n_conv_layers = int(torch.log2(torch.tensor(self.final_image_size / self.featuremap_size)).item())
+
+        self.n_initial_feature_maps = 64 * (2**n_conv_layers)
+
+        # Initial layers to project z to a space that can be reshaped into a feature map
+        self.initial_linear = nn.Linear(z_dim, self.n_initial_feature_maps * (self.featuremap_size ** 2))
+        self.initial_batch_norm = nn.BatchNorm2d(self.n_initial_feature_maps)
+        self.initial_relu =  nn.ReLU(True)
+
+        # Convolutional layers
+        layers = []
+        in_channels = self.n_initial_feature_maps
+        for i in range(n_conv_layers-1):
+            out_channels = in_channels // 2
+            layers.append(nn.ConvTranspose2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1, bias=False))
+            layers.append(nn.BatchNorm2d(out_channels))
+            layers.append(nn.ReLU(True))
+            in_channels = out_channels
+
+        # Final layer
+        layers.append(
+            nn.ConvTranspose2d(in_channels, self.out_channels, kernel_size=4, stride=2, padding=1, bias=False))
+        layers.append(nn.Tanh())  # To output values in the range [-1, 1]
+
+        self.conv= nn.Sequential(*layers)
+
+
         # ========================
 
     def sample(self, n, with_grad=False):
@@ -78,7 +139,9 @@ class Generator(nn.Module):
         #  Generate n latent space samples and return their reconstructions.
         #  Don't use a loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        with torch.set_grad_enabled(with_grad):
+            z = torch.randn(n, self.z_dim, device=device)
+            samples = self.forward(z)
         # ========================
         return samples
 
@@ -92,7 +155,11 @@ class Generator(nn.Module):
         #  Don't forget to make sure the output instances have the same
         #  dynamic range as the original (real) images.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        x = self.initial_linear(z)
+        x = x.view(-1, self.n_initial_feature_maps, self.featuremap_size, self.featuremap_size)  # Reshape to (batch_size, channels, H, W)
+        x= self.initial_batch_norm(x)
+        x=self.initial_relu(x)
+        x= self.conv(x)
         # ========================
         return x
 
