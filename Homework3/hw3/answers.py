@@ -41,7 +41,9 @@ def part1_generation_params():
     temperature = 0.0001
     # TODO: Tweak the parameters to generate a literary masterpiece.
     # ====== YOUR CODE: ======
-    
+    start_seq = "Act I."
+
+    temperature = 0.3
     # ========================
     return start_seq, temperature
 
@@ -100,9 +102,15 @@ to retain and utilize long-term dependencies.
 """
 
 part1_q4 = r"""
-**Your answer:**
+1.Lowering the temperature modifies the softmax function to create a sharper probability distribution.
+This means that the probabilities diverge more significantly, with higher probabilities becoming even higher,
+and lower probabilities becoming closer to zero. Lowering the temperature is used to make the model outputs 
+more predictable and less random by emphasizing more probable outcomes. When T=1, , as observed from the plot above,
+many characters share similar distributions, so the output may become too random and lack coherence
+(since each character is sampled based on the distribution).
 
 
+2. 
 """
 # ==============
 
