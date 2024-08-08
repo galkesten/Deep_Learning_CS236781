@@ -146,7 +146,19 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
     #  generated labels.
     #  See pytorch's BCEWithLogitsLoss for a numerically stable implementation.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    if data_label == 1:
+        real_label_noise_range = (1 - label_noise/2.0, 1+label_noise/2.0)
+        fake_label_noise_range = (0-label_noise/2.0, 0+label_noise/2.0)
+    else:
+        real_label_noise_range = (0-label_noise/2.0, 0+label_noise/2.0)
+        fake_label_noise_range = (1 - label_noise/2.0, 1+label_noise/2.0)
+
+    real_labels = torch.empty(y_data.size(0)).uniform_(*real_label_noise_range)
+    fake_labels = torch.empty(y_generated.size(0)).uniform_(*fake_label_noise_range)
+
+    loss_data= F.binary_cross_entropy_with_logits(y_data, real_labels)
+    loss_generated = F.binary_cross_entropy_with_logits(y_generated, fake_labels)
+
     # ========================
     return loss_data + loss_generated
 
@@ -167,7 +179,8 @@ def generator_loss_fn(y_generated, data_label=0):
     #  Think about what you need to compare the input to, in order to
     #  formulate the loss in terms of Binary Cross Entropy.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    labels = torch.full_like(y_generated, data_label, dtype=torch.float)
+    loss= F.binary_cross_entropy_with_logits(y_generated, labels)
     # ========================
     return loss
 
