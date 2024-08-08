@@ -7,6 +7,9 @@ from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
 import numpy as np
 
+from hw3.autoencoder import EncoderCNN, DecoderCNN
+
+
 class Discriminator(nn.Module):
     def __init__(self, in_size):
         """
@@ -25,28 +28,14 @@ class Discriminator(nn.Module):
         # Ensure input size is a power of 2
         assert H == W and ((H & (H - 1)) == 0) and H != 0, "Height and Width must be powers of 2 and equal."
 
-        # Calculate the number of layers needed, minus 2 since we want to go to 4x4
-        n_layers = int(np.log2(H))-2
+        # Use EncoderCNN to extract features
+        self.cnn = EncoderCNN(in_channels=C, out_channels=512)
 
-        # Initial number of filters and filter size
-        kernel_size = 4
-        stride = 2
-        padding = 1
+        encoder_num_features = self._calc_num_cnn_features(self.in_size)
 
-        # Define the convolutional layers
-        layers = []
-        in_channels = C
-        out_channels = 64
-        for i in range(n_layers):  # -1 to ensure the last layer has 1x1 output
-            layers.append(nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, stride=stride, padding=padding))
-            if i != 0:  # No BatchNorm on the first layer
-                layers.append(nn.BatchNorm2d(out_channels))
-            layers.append(nn.LeakyReLU(0.2, inplace=True))
-            in_channels = out_channels
-            out_channels *= 2
+        self.fc = nn.Sequential(nn.Flatten(), nn.Linear(encoder_num_features, 1))
 
-        layers.append(nn.Conv2d(in_channels, 1, kernel_size=kernel_size, stride=1, padding=0))
-        self.cnn = nn.Sequential(*layers)
+
 
     def _calc_num_cnn_features(self, in_shape):
         with torch.no_grad():
@@ -57,7 +46,7 @@ class Discriminator(nn.Module):
     def forward(self, x):
         """
         :param x: Input of shape (N,C,H,W) matching the given in_size.
-        :return: Discriminator class score (not probability) of
+        :return: Discriminator class score (not probability) ofi
         shape (N,).
         """
         # TODO: Implement discriminator forward pass.
@@ -65,7 +54,7 @@ class Discriminator(nn.Module):
         #  with the loss due to improved numerical stability.
         # ====== YOUR CODE: ======
         y = self.cnn(x)
-        y= y.view(x.size(0), -1)
+        y= self.fc(y)
         # ========================
         return y
 
@@ -80,49 +69,21 @@ class Generator(nn.Module):
         """
         super().__init__()
         self.z_dim = z_dim
-
-
         # TODO: Create the generator model layers.
         #  To combine image features you can use the DecoderCNN from the VAE
         #  section or implement something new.
         #  You can assume a fixed image size.
         # ====== YOUR CODE: ======
+        self.featuremap_size= featuremap_size
+        self.n_initial_feature_maps = 512
         assert(featuremap_size > 0 and (
                     featuremap_size & (featuremap_size - 1)) == 0), "featuremap_size must be a power of 2"
 
-        self.z_dim = z_dim
-        self.featuremap_size = featuremap_size
-        self.out_channels = out_channels
-        self.final_image_size = 64  # Assuming fixed final image size of 64x64
-
-        # Calculate the number of upsampling layers needed
-        n_conv_layers = int(torch.log2(torch.tensor(self.final_image_size / self.featuremap_size)).item())
-
-        self.n_initial_feature_maps = 64 * (2**n_conv_layers)
-
         # Initial layers to project z to a space that can be reshaped into a feature map
         self.initial_linear = nn.Linear(z_dim, self.n_initial_feature_maps * (self.featuremap_size ** 2))
-        self.initial_batch_norm = nn.BatchNorm2d(self.n_initial_feature_maps)
+        self.initial_batch_norm = nn.BatchNorm2d(512)
         self.initial_relu =  nn.ReLU(True)
-
-        # Convolutional layers
-        layers = []
-        in_channels = self.n_initial_feature_maps
-        for i in range(n_conv_layers-1):
-            out_channels = in_channels // 2
-            layers.append(nn.ConvTranspose2d(in_channels, out_channels, kernel_size=4, stride=2, padding=1, bias=False))
-            layers.append(nn.BatchNorm2d(out_channels))
-            layers.append(nn.ReLU(True))
-            in_channels = out_channels
-
-        # Final layer
-        layers.append(
-            nn.ConvTranspose2d(in_channels, self.out_channels, kernel_size=4, stride=2, padding=1, bias=False))
-        layers.append(nn.Tanh())  # To output values in the range [-1, 1]
-
-        self.conv= nn.Sequential(*layers)
-
-
+        self.conv= DecoderCNN(self.n_initial_feature_maps,out_channels)
         # ========================
 
     def sample(self, n, with_grad=False):
