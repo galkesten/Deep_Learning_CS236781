@@ -95,7 +95,7 @@ class Generator(nn.Module):
         self.initial = nn.Sequential(
             nn.ConvTranspose2d(z_dim, self.n_initial_feature_maps, 4, 1, 0, bias=False),
             nn.BatchNorm2d(512),
-            nn.ReLU(True)
+            nn.LeakyReLU(0.2, inplace=True)
         )
         self.conv= DecoderCNN(self.n_initial_feature_maps,out_channels)
         self.apply(weights_init)
@@ -268,12 +268,9 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     #  You should decide what logic to use for deciding when to save.
     #  If you save, set saved to True.
     # ====== YOUR CODE: ======
-    if len(gen_losses) > 0:
-        # Check if the latest generator loss is the lowest
-        if gen_losses[-1] == min(gen_losses):
-            torch.save(gen_model, checkpoint_file)
-            print(f"*** Saved checkpoint {checkpoint_file} ")
-            saved = True
+    if len(gen_losses) % 5 == 0:
+        torch.save(gen_model, checkpoint_file)
+        saved = True
     # ========================
 
     return saved

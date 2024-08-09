@@ -69,15 +69,15 @@ class DecoderCNN(nn.Module):
         # ====== YOUR CODE: ======
         modules.append(nn.ConvTranspose2d(in_channels, 256, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(256))
-        modules.append(nn.ReLU(True))
+        modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         modules.append(nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(128))
-        modules.append(nn.ReLU(True))
+        modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         modules.append(nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(64))
-        modules.append(nn.ReLU(True))
+        modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         modules.append(nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1, bias=False))
         # ========================
