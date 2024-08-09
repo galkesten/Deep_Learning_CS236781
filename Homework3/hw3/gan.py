@@ -1,3 +1,5 @@
+from pickletools import optimize
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -9,6 +11,16 @@ import numpy as np
 
 from hw3.autoencoder import EncoderCNN, DecoderCNN
 
+
+def weights_init(m):
+    if isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
+        nn.init.normal_(m.weight, mean=0.0, std=0.02)
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)
+    elif isinstance(m, nn.BatchNorm2d):
+        nn.init.normal_(m.weight, mean=1.0, std=0.02)
+        if m.bias is not None:
+            nn.init.constant_(m.bias, 0)
 
 class Discriminator(nn.Module):
     def __init__(self, in_size):
@@ -33,9 +45,9 @@ class Discriminator(nn.Module):
 
         encoder_num_features = self._calc_num_cnn_features(self.in_size)
 
-        self.fc = nn.Sequential(nn.Flatten(), nn.Linear(encoder_num_features, 1))
+        self.fc = nn.Sequential(nn.Flatten(), nn.Linear(encoder_num_features, 1, bias=False))
 
-
+        self.apply(weights_init)
 
     def _calc_num_cnn_features(self, in_shape):
         with torch.no_grad():
@@ -80,10 +92,13 @@ class Generator(nn.Module):
                     featuremap_size & (featuremap_size - 1)) == 0), "featuremap_size must be a power of 2"
 
         # Initial layers to project z to a space that can be reshaped into a feature map
-        self.initial_linear = nn.Linear(z_dim, self.n_initial_feature_maps * (self.featuremap_size ** 2))
-        self.initial_batch_norm = nn.BatchNorm2d(512)
-        self.initial_relu =  nn.ReLU(True)
+        self.initial = nn.Sequential(
+            nn.ConvTranspose2d(z_dim, self.n_initial_feature_maps, 4, 1, 0, bias=False),
+            nn.BatchNorm2d(512),
+            nn.ReLU(True)
+        )
         self.conv= DecoderCNN(self.n_initial_feature_maps,out_channels)
+        self.apply(weights_init)
         # ========================
 
     def sample(self, n, with_grad=False):
@@ -101,10 +116,11 @@ class Generator(nn.Module):
         #  Don't use a loop.
         # ====== YOUR CODE: ======
         with torch.set_grad_enabled(with_grad):
-            z = torch.randn(n, self.z_dim, device=device)
+            z = torch.randn(n, self.z_dim,device=device)
             samples = self.forward(z)
         # ========================
         return samples
+
 
     def forward(self, z):
         """
@@ -116,10 +132,8 @@ class Generator(nn.Module):
         #  Don't forget to make sure the output instances have the same
         #  dynamic range as the original (real) images.
         # ====== YOUR CODE: ======
-        x = self.initial_linear(z)
-        x = x.view(-1, self.n_initial_feature_maps, self.featuremap_size, self.featuremap_size)  # Reshape to (batch_size, channels, H, W)
-        x= self.initial_batch_norm(x)
-        x=self.initial_relu(x)
+        z = z.view(-1,self.z_dim,1,1)
+        x = self.initial(z)
         x= self.conv(x)
         # ========================
         return x
@@ -146,6 +160,7 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
     #  generated labels.
     #  See pytorch's BCEWithLogitsLoss for a numerically stable implementation.
     # ====== YOUR CODE: ======
+    device = y_data.device
     if data_label == 1:
         real_label_noise_range = (1 - label_noise/2.0, 1+label_noise/2.0)
         fake_label_noise_range = (0-label_noise/2.0, 0+label_noise/2.0)
@@ -153,8 +168,8 @@ def discriminator_loss_fn(y_data, y_generated, data_label=0, label_noise=0.0):
         real_label_noise_range = (0-label_noise/2.0, 0+label_noise/2.0)
         fake_label_noise_range = (1 - label_noise/2.0, 1+label_noise/2.0)
 
-    real_labels = torch.empty(y_data.size(0)).uniform_(*real_label_noise_range)
-    fake_labels = torch.empty(y_generated.size(0)).uniform_(*fake_label_noise_range)
+    real_labels = torch.empty(y_data.size(0), device=device).uniform_(*real_label_noise_range)
+    fake_labels = torch.empty(y_generated.size(0), device=device).uniform_(*fake_label_noise_range)
 
     loss_data= F.binary_cross_entropy_with_logits(y_data, real_labels)
     loss_generated = F.binary_cross_entropy_with_logits(y_generated, fake_labels)
@@ -205,7 +220,20 @@ def train_batch(
     #  2. Calculate discriminator loss
     #  3. Update discriminator parameters
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    device = next(dsc_model.parameters()).device
+    batch_size = x_data.size(0)
+    fake_sampled_data = gen_model.sample(batch_size, with_grad=True).to(device)
+
+    dsc_optimizer.zero_grad()
+    y_data = dsc_model.forward(x_data).view(-1).to(device)
+    y_generated_without_grad = dsc_model.forward(fake_sampled_data.detach()).view(-1).to(device)# the fake data should be fixed when updating dsc_model params (fixed gen)
+    #we don't want gen_model to be updated later based on this
+
+    dsc_loss = dsc_loss_fn(y_data, y_generated_without_grad)
+    dsc_loss.backward()
+
+    dsc_optimizer.step()
+
     # ========================
 
     # TODO: Generator update
@@ -213,7 +241,11 @@ def train_batch(
     #  2. Calculate generator loss
     #  3. Update generator parameters
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    gen_optimizer.zero_grad()
+    y_generated_with_grad= dsc_model(fake_sampled_data).view(-1).to(device)
+    gen_loss = gen_loss_fn(y_generated_with_grad)
+    gen_loss.backward()
+    gen_optimizer.step()
     # ========================
 
     return dsc_loss.item(), gen_loss.item()
@@ -236,9 +268,12 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     #  You should decide what logic to use for deciding when to save.
     #  If you save, set saved to True.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    if len(gen_losses) > 0:
+        # Check if the latest generator loss is the lowest
+        if gen_losses[-1] == min(gen_losses):
+            torch.save(gen_model.state_dict(), checkpoint_file)
+            print(f"*** Saved checkpoint {checkpoint_file} ")
+            saved = True
     # ========================
-    torch.save(gen_model, checkpoint_file)
-    print(f"*** Saved checkpoint {checkpoint_file} ")
-    saved = True
+
     return saved
