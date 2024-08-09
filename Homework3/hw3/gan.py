@@ -271,7 +271,7 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     if len(gen_losses) > 0:
         # Check if the latest generator loss is the lowest
         if gen_losses[-1] == min(gen_losses):
-            torch.save(gen_model.state_dict(), checkpoint_file)
+            torch.save(gen_model, checkpoint_file)
             print(f"*** Saved checkpoint {checkpoint_file} ")
             saved = True
     # ========================
