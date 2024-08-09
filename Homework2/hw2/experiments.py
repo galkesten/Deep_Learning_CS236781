@@ -8,8 +8,9 @@ import itertools
 import torchvision
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
-
+from sklearn.model_selection import KFold
 from cs236781.train_results import FitResult
+from torch.utils.data import DataLoader, Subset
 
 from .cnn import CNN, ResNet
 from .mlp import MLP
@@ -49,6 +50,27 @@ def mlp_experiment(
     # ========================
     return model, thresh, valid_acc, test_acc
 
+
+def average_results(fold_results):
+    # Function to average the results from all folds
+    avg_result = {
+        "train_loss": [],
+        "train_acc": [],
+        "test_loss": [],
+        "test_acc": [],
+    }
+
+    num_folds = len(fold_results)
+    for fold_result in fold_results:
+        avg_result["train_loss"].extend(fold_result.train_loss)
+        avg_result["train_acc"].extend(fold_result.train_acc)
+        avg_result["test_loss"].extend(fold_result.test_loss)
+        avg_result["test_acc"].extend(fold_result.test_acc)
+
+    for key in avg_result:
+        avg_result[key] = sum(avg_result[key]) / len(avg_result[key])
+
+    return avg_result
 
 def cnn_experiment(
     run_name,

@@ -406,17 +406,6 @@ When performing multiple forward passes before doing a single backward pass, the
    preventing excessive memory usage. 
 
 
-
-Even though we are using batch sizes small enough to fit into memory, an out of memory error can occur because 
-when we accumulate the losses from multiple forward passes, the computation graphs for each batch are also accumulated. 
-This means memory usage grows with each batch processed until it exceeds the available memory.
-
-We cannot clear the outputs because we are using the backpropagation algorithm, which requires the computational graph 
-along the way. This method treats the data as if it was actually calculated together in a single forward pass, 
-therefore requiring all outputs for gradient calculations. To compute the gradients correctly using the chain rule, 
-we need to retain the entire computation graph until the backward pass is complete.
-
-
 """
 
 part2_q4 = r"""
@@ -535,21 +524,41 @@ part3_q1 = r"""
 
 **High  Optimization error:**
 
-High Optimization error occurs when the training process fails to sufficiently minimize the loss function on the training data.
-Neural networks often have highly non-convex loss surfaces, making it challenging to find the global optimum.
-Issues such as vanishing gradients, varying rates of convergence in different dimensions, 
-and dependency on initialization can contribute to high optimization error.
-
+High optimization error occurs when the model is unable to minimize the training loss effectively. 
+This indicates that the model is not fitting the training data well, which can be due to poor optimization techniques, 
+an insufficiently complex model, or issues inherent to the training process. In addition, neural networks often have highly non-convex loss surfaces, 
+making it challenging to find the global optimum. Issues such as vanishing gradients, varying rates of convergence in different dimensions,
+ and dependency on initialization can also contribute to high optimization error.
+ 
 Solutions proposed during course:
-- Advanced Optimizers: Utilize optimization algorithms such as SGD with Momentum, Adam, or RMSprop to enhance convergence rates and stability.
-- Learning Rate Scheduling: Reduce the learning rate every few epoches
+1. Learning Rate Adjustment:
+- Use an appropriate learning rate: Too high a learning rate can cause the model to overshoot minima, while too low can lead to slow convergence.
+- Learning Rate Scheduling: Reduce the learning rate every few epochs to improve convergence.
 - Warmups: Gradually increase the learning rate at the start of training to stabilize initial updates.
-- Proper Weight Initialization: Use advanced initialization methods like Xavier initialization
- to set effective starting points for the weights.
+2. Advanced Optimization Algorithms:
+- Adam, RMSprop, or AdaGrad: These optimizers adapt the learning rate and handle sparse gradients more effectively than standard gradient descent.
+- SGD with Momentum: Enhances convergence rates and stability by accelerating the gradient vectors in the right directions.
+3. Receptive Field:
+- Increase the receptive field: with larger receptive fields, neurons can extract more relevant and comprehensive features from the input data,
+this means the model can learn more effectively from the training data, leading to better fitting and reduced optimization error.
+This reduces issues like vanishing gradients, which can hinder the optimization process.
+4. Regularization Techniques:
+- L2 Regularization (Weight Decay): Helps to prevent overfitting and improve the model's ability to optimize effectively.
+- Dropout: Another regularization technique to prevent overfitting by randomly dropping units during training.
+5. Hyperparameter Tuning:
+- Experiment with different hyperparameters such as batch size, learning rate schedules, and network architecture to find the optimal configuration.
+6. Proper Weight Initialization:
+- Xavier Initialization: Use advanced initialization methods like Xavier or He initialization to set effective starting points for the weights, which helps in achieving faster and more stable convergence.
+7. Normalization:
+- Batch Normalization: Stabilize and accelerate training by normalizing the inputs of each layer, 
+which helps in maintaining consistent gradient behavior across different axes.
 - Preprocessing Data: Normalize and preprocess data to ensure consistent gradient behavior across different axes. 
-    We can also use batch normalization techniques to learn how to best normalize the data.
-- Skip Connections: Introduce skip connections (e.g., as in ResNet) to mitigate vanishing gradients.
-
+This can include standardization, normalization, and using techniques like batch normalization.
+8. Skip Connections:
+- Introduce skip connections (e.g., as in ResNet) to mitigate vanishing gradients and ensure better gradient flow during backpropagation.
+ 
+ 
+ 
 **High Generalization Error:**
 
 High Generalization error arises when the model performs well on the training data but poorly on unseen data. 
@@ -570,8 +579,9 @@ Solutions proposed during course:
 
 **High approximation Error:**
 
-Approximation error occurs when the chosen hypothesis class H is not expressive enough to capture
+Approximation error occurs when the chosen hypothesis class H is not expressive enough (the model is too simple) to capture
 the underlying patterns in the data. 
+This indicates underfitting, where the model lacks the capacity to learn the complexity of the data. 
 
 Solutions proposed during course:
 
@@ -581,48 +591,86 @@ Solutions proposed during course:
 - Receptive Field Adjustments: In CNNs, increasing the receptive field as we go deeper in the network allows each layer
 to capture features at different levels of abstraction, reducing approximation error by enabling
 the model to learn more complex patterns.
+- Feature Engineering: Create more informative features that capture the underlying patterns in the data. 
+This can involve domain knowledge and techniques like polynomial features or interaction terms
 
 """
 
 part3_q2 = r"""
 **Your answer:**
-We expect the FPR to be higher when the ratio between positive labels and negative labels in the 
-training dataset does not approximate the real-life ratio. For example, in email spam detection, if we use more spam 
-emails than there are in real life to expose the model to many spam samples, 
-the classifier may become overly sensitive, leading to a higher FPR.
 
-Conversely, we expect the FNR to be higher when the ratio between positive labels (e.g., disease cases) and negative 
-labels (e.g., healthy cases) in the training dataset does not reflect the real-life ratio. 
-This can occur in cases where positive samples are hard to obtain, such as rare diseases. 
-The lack of sufficient positive examples can prevent the classifier from learning to detect them effectively,
-resulting in a higher FNR.
+**False Positive Rate (FPR):** 
+The proportion of negative instances that are incorrectly classified as positive.
+$$
+\text{FPR} = \frac{\text{False Positive (FP)}}{\text{False Positive (FP)} + \text{True Negative(TN)}}
+$$
+**False Negative Rate (FNR):**
+The proportion of positive instances that are incorrectly classified as negative.
+$$
+\text{FNR} = \frac{\text{False Negative (FN)}}{\text{False Negative (FN)} + \text{True Positive(TP)}}
+$$
+
+We expect a higher FPR when the ratio of positive to negative labels in the training dataset does not approximate the real-life ratio. 
+For example, in email spam detection, using more spam emails than usual can make the classifier overly sensitive, 
+leading to more legitimate emails being marked as spam (higher FPR). 
+Additionally, setting a low decision threshold to avoid missing any spam (high cost of false negatives) further increases the FPR.
+
+We expect a higher FNR when the ratio of positive to negative labels does not reflect real-life proportions, 
+such as in disease detection with rare diseases. 
+The scarcity of positive samples prevents the classifier from learning to detect them effectively, resulting in a higher FNR.
+Additionally, setting a high decision threshold to avoid false positives (high cost of false positives) can lead to missing actual positive cases, further increasing the FNR.
 
 """
 
 part3_q3 = r"""
 **Your answer:**
-
-
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+The choice of the "optimal" point on the ROC curve for screening a
+large cohort of patients for a disease depends on the specific consequences of
+false positives (FP) and false negatives (FN). In the first scenario,
+where a person with the disease will develop non-lethal symptoms that confirm the
+diagnosis and can then be treated,
+it is crucial to minimize the False Positive Rate (FPR) to avoid unnecessary
+high-cost and high-risk tests, even if it means a moderate increase in the
+False Negative Rate (FNR), as these patients will eventually be diagnosed
+when symptoms appear. Conversely, in the second scenario,
+where a person with the disease shows no clear symptoms and may die
+with high probability if not diagnosed early enough, the priority shifts to
+maximizing the True Positive Rate (TPR) to ensure early detection and treatment,
+thus reducing the risk of death, even if it results in a higher FPR.
+Therefore, the optimal point on the ROC curve varies: it should favor a lower
+FPR in the first scenario and a higher TPR in the second,
+based on the differing costs and risks associated with FPs and FNs in each case.
 
 """
 
 
 part3_q4 = r"""
 **Your answer:**
+An MLP is not ideal for training on sequential
+data such as text, where each data point is a word, and the goal is to
+classify the sentiment of a sentence.
+The main reason is that MLPs process inputs independently without considering
+the order in which they appear. An MLP gets one input at a time and lacks memory,
+making it problematic to handle sequential data.
 
+One potential solution is to average all the word embeddings together,
+but this approach loses the positional information of the words.
+Consequently, sentences containing the same words in different orders would be
+indistinguishable, leading to confusion in the model. For example,
+the sentences "I am not happy" and "I am happy not" would appear the same
+to the MLP if their word embeddings are averaged, despite having different
+sentiments.
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+Another approach could be to concatenate the word embeddings to create a
+single input vector for the MLP. However, this has significant disadvantages.
+The resulting vectors can become excessively long, which increases the
+computational complexity and the risk of overfitting. Additionally,
+this method imposes a limit on the size of the sentences that can be processed,
+as the input size for the MLP needs to be fixed,
+necessitating either truncation of longer sentences or padding of
+shorter ones, both of which can lead to loss of information or
+inclusion of irrelevant data.
+
 
 """
 # ==============
@@ -900,17 +948,78 @@ we can achieve even better results.
 
 part6_q1 = r"""
 **Your answer:**
+The model exhibits poor performance in detection and also struggles with some localization issues.
+
+1.1
+
+Detailed explanation:
+
+**Image 1**
+- **Localization:**
+There are actually three dolphins in the image. Two of them are close together, which might have confused the model, 
+resulting in a single bounding box covering both dolphins. The third dolphin's tail is detected as a separate object.
+- **Detection**
+- The detection performance is poor. The model incorrectly identified:
+  - Two dolphins as "person" with confidence scores of $0.53$ and $0.90$.
+  - The tail of a dolphin as a "surfboard" with a confidence score of $0.37$.
+- The model is quite confident ($90\%$) about one of its incorrect predictions, indicating a significant detection error.
+
+**Image 2**
+- *Localization*
+- The model localized three objects(the dogs) but failed to detect the cat.
+
+- **Detection**
+- The model made the following predictions:
+  - Two dogs were labeled as "cat" with confidence scores of $0.65$ and $0.39$.
+  - The third dog was labeled correctly but with a low confidence score of $0.50$.
+- The model's predictions show confusion between cats and dogs, indicating issues with the classification performance.
+
+1.2
+**Failure Reasons for the First Image**
+ the model fails because "dolphin" is not a class in the YOLOv5 model's training data, 
+ causing it to mislabel the dolphins as other classes. 
+ Regarding the problem of mislocalizing the two dolphins, it may be related to the black shadow that merges the objects, 
+ making it difficult for the model to distinguish between them.
+ Moreover,it's likely that the model hasn't been trained on enough dolphin images,
+especially those taken in similar lighting conditions. Also, there might be a bias in the training data
+towards pictures of people surfing at sunset, leading the model to wrongly label dolphins as people and surfboards.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+**Failure Reasons for the Second Image**
+In the second image, even though the resolution is better, the model still struggles with classification.
+It confuses dogs for cats, probably because of the dogs' cat-like ear shapes and poses.
+This suggests that the model hasn't seen enough examples of these variations in the training data.
+The unusual poses and features of the dogs might be confusing the model, causing these incorrect classifications.
+Additionally, the model completely misses detecting one of the cats. This could be due to how anchor
+ boxes are used in YOLOv5.
+YOLOv5 uses anchor boxes to predict bounding boxes around objects. Anchor boxes are pre-defined boxes with specific 
+heights and widths that the model uses as a reference. If these predefined anchor boxes don't match the sizes 
+and shapes of the objects in the image well, the model might have trouble detecting them. 
+This mismatch can lead to missed objects or inaccurate localization. By optimizing these anchor boxes to better
+fit the objects in the training data, the model's performance can be improved.
 
+**Solutions***
+To address these issues, we need to improve the training dataset with a wider variety of images. 
+This means adding more pictures of dolphins in different lighting conditions and dogs with various ear shapes and poses.
+ Using data augmentation techniques can also help make the training data more diverse.
+  For the first image, increasing the contrast between the two dolphins can help the model distinguish them better. 
+  Additionally, optimizing anchor boxes by analyzing the dataset can ensure they better match the size and shapes of 
+  the objects in the images. This involves checking the training data to find the most common object sizes and shapes 
+  and adjusting the anchor boxes accordingly. Refining how the bounding boxes are set up can also help the model 
+  detect and localize objects more accurately. Using more bounding boxes per grid cell can also 
+  improve the detection of objects with varying sizes and shapes, further enhancing the model's performance. 
+  Finally, we should the model on more classes like dolphin.
+
+1.3
+Using Projected Gradient Descent (PGD), we can generate adversarial examples that target YOLO's classification, 
+localization, and confidence predictions. The process involves adding small perturbations to the input image,
+calculating the gradient of the targeted loss function (classification, localization, confidence losses,
+or a combination), and iteratively updating the perturbation to maximize the loss. 
+By projecting the perturbed image back into the valid input space to keep changes realistic, we create adversarial 
+images that cause the model to misclassify objects, alter bounding box coordinates, 
+miss objects entirely, or detect nonexistent objects. This method disrupts the model's performance while
+keeping the adversarial changes imperceptible to human observers.
 """
-
 
 part6_q2 = r"""
 **Your answer:**
@@ -925,29 +1034,52 @@ An equation: $e^{i\pi} -1 = 0$
 
 """
 
-
 part6_q3 = r"""
 **Your answer:**
 
+Picture 1: Cluttered Background
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+Description: A cluttered bookshelf with many overlapping dolls and books.
 
+Inference Results: The detector identified 18 books and incorrectly identified a person’s hand as a person. 
+It failed to detect any of the dolls, likely due to the high number of objects and clutter. 
+Even among the books, some were missed, and the model's confidence in its detections was low.
+
+Picture 2: Partial Occlusion and Model Bias
+
+Description: A book is photographed at an angle, with parts of it excluded.
+
+Inference Results: The model misclassified the book as a laptop, indicating a bias. 
+The model seems to associate certain angles with laptops and expects books to 
+be in specific orientations and fully visible to classify them correctly. 
+In a previous example, books in a library setting were correctly identified due to the context and orientation.
+
+Picture 3: Illumination Conditions and Partial Occlusion
+
+Description: The image is taken in a dark room with poor lighting.
+
+Inference Results: The detector failed to identify the table due to the poor
+ lighting, making it difficult to distinguish objects. It misclassified the laundry hanger as a chair,
+ which is reasonable due to the fact the model doesnt classify laundry hanger.
+ The couch was also poorly localized due to the lighting conditions.
 """
 
 part6_bonus = r"""
 **Your answer:**
+For the partial photo, we flipped the image 180 degrees and received a correct prediction
+(book) with low confidence.
+This strengthens our observation that the model has a bias regarding the angle of the photo when distinguishing between
+a computer and a book.
 
 
-Write your answer using **markdown** and $\LaTeX$:
-```python
-# A code block
-a = 2
-```
-An equation: $e^{i\pi} -1 = 0$
+For the other photos, we couldn't resolve the issues.
+
+1. **Cluttered Background**: The model fails to recognize the dolls as objects.
+Even when we photographed a single doll, the model did not recognize it.
+
+2. **Dark Photo**: We attempted to lighten the background but were unsuccessful
+in both recognizing the table and maintaining accurate recognition of the couch.
+Additionally, the model kept misclassifying the table as a chair or oven.
+We believe that lightening the photo introduced a lot of noise, further confusing the model.
 
 """
