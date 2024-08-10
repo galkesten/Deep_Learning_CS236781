@@ -261,14 +261,16 @@ def save_checkpoint(gen_model, dsc_losses, gen_losses, checkpoint_file):
     """
 
     saved = False
-    checkpoint_file = f"{checkpoint_file}.pt"
+    epoch_idx = len(gen_losses) + 1
+    checkpoint_file = f"{checkpoint_file}_{epoch_idx}.pt"
 
     # TODO:
     #  Save a checkpoint of the generator model. You can use torch.save().
     #  You should decide what logic to use for deciding when to save.
     #  If you save, set saved to True.
     # ====== YOUR CODE: ======
-    if len(gen_losses) % 5 == 0:
+
+    if len(gen_losses) % 4 == 0:
         torch.save(gen_model, checkpoint_file)
         saved = True
     # ========================
