@@ -29,14 +29,14 @@ NUM_NODES=1
 NUM_CORES=2
 NUM_GPUS=1
 JOB_NAME="test_job"
-MAIL_USER="example@example.com"
+MAIL_USER="galkesten@campus.technion.ac.il"
 MAIL_TYPE=ALL # Valid values are NONE, BEGIN, END, FAIL, REQUEUE, ALL
 
 ###
 # Conda parameters
 #
 CONDA_HOME=$HOME/miniconda3
-CONDA_ENV=cs236781-hw
+CONDA_ENV=cs236781-hw3
 
 sbatch \
 	-N $NUM_NODES \

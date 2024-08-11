@@ -93,7 +93,7 @@ class Generator(nn.Module):
 
         # Initial layers to project z to a space that can be reshaped into a feature map
         self.initial = nn.Sequential(
-            nn.ConvTranspose2d(z_dim, self.n_initial_feature_maps, 4, 1, 0, bias=False),
+            nn.ConvTranspose2d(z_dim, self.n_initial_feature_maps, self.featuremap_size, 1, 0, bias=False),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(0.2, inplace=True)
         )
