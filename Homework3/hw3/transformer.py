@@ -1,10 +1,38 @@
 import torch
 import torch.nn as nn
 import math
+import torch.nn.functional as F
 
-
-
-
+# ######## implementation of basic attention
+# # d_k is vector dimensionality of k,v
+# d_k = q.size()[-1]
+# # QK^T , K = [Batch, SeqLen, Dims], K^T = [Batch, Dims, SeqLen]
+# attention_scores = torch.matmul(q, k.transpose(-1, -2))  # [Batch, SeqLen, SeqLen]
+# # QK^T / sqrt(d_k)
+# attention_scores = attention_scores / torch.sqrt(torch.tensor(d_k, dtype=torch.float32, device=q.device))
+# if padding_mask is not None:
+#     attention_scores = attention_scores.masked_fill(padding_mask.unsqueeze(1) == 0, float('-inf'))
+# attention_weights = nn.functional.softmax(attention_scores, dim=-1)
+# output_values = torch.matmul(attention_weights, v)
+#
+# ##### implementation of basic attention with multihead
+# d_k = q.size()[-1]
+# is_multihead = q.dim() == 4
+# if is_multihead:
+#     num_heads = q.shape[1]  # [Batch, num_heads, SeqLen, Dims]
+#     attention_scores = torch.zeros((batch_size, num_heads, seq_len, embed_dim), device=q.device)
+# else:
+#     attention_scores = torch.zeros((batch_size, seq_len, embed_dim), device=q.device)
+# # QK^T , K = [Batch, num_heads, SeqLen, Dims], K^T = [Batch, num_heads, Dims, SeqLen]
+# attention_scores = torch.matmul(q, k.transpose(-1, -2))  # [Batch, num_heads, seq_len , seq_len]
+# attention_scores = attention_scores / torch.sqrt(torch.tensor(d_k, dtype=torch.float32, device=q.device))
+# if padding_mask is not None:
+#     if is_multihead:
+#         attention_scores = attention_scores.masked_fill(padding_mask.unsqueeze(1).unsqueeze(2) == 0, float('-inf'))
+#     else:
+#         attention_scores = attention_scores.masked_fill(padding_mask.unsqueeze(1) == 0, float('-inf'))
+# attention_weights = nn.functional.softmax(attention_scores, dim=-1)
+# output_values = torch.matmul(attention_weights, v)
 
 def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     '''
@@ -21,7 +49,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     assert window_size%2 == 0, "window size must be an even number"
     seq_len = q.shape[-2]
     embed_dim = q.shape[-1]
-    batch_size = q.shape[0] 
+    batch_size = q.shape[0]
 
     values, attention = None, None
 
@@ -37,10 +65,74 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
-    raise NotImplementedError()
+    ###### sliding_window_attention
+    half_window_size = window_size // 2
+    batch_size = q.size()[0]
+    num_heads = q.size()[1]
+    seq_len = q.size()[-2]
+    embed_dim = q.size()[-1]
+    is_multihead = q.dim() == 4
+
+    # padding the key and value tensors to handle the edges
+    padding = (0, 0, half_window_size, half_window_size)
+    k_padded = F.pad(k, padding, mode='constant', value=0)
+
+    # creating the index tensor for gathering the queries and keys
+    k_indices = torch.arange(0, k_padded.size()[-2])
+    k_indices_unfolded = k_indices.unfold(0, window_size+1, 1)
+
+    # Expand the indices for all batches and heads
+    if is_multihead:
+        expanded_indices = k_indices_unfolded.unsqueeze(0).unsqueeze(0).repeat(batch_size, num_heads, 1, 1)
+        gather_indices = expanded_indices.unsqueeze(-1).expand(-1, -1, -1, -1, embed_dim)
+        k_padded_expanded = k_padded.unsqueeze(2).expand(-1, -1, seq_len, -1, -1)
+    else:
+        expanded_indices = k_indices_unfolded.unsqueeze(0).repeat(batch_size, 1, 1)
+        gather_indices = expanded_indices.unsqueeze(-1).expand(-1, -1, -1, embed_dim)
+        k_padded_expanded = k_padded.unsqueeze(1).expand(-1, seq_len, -1, -1)
+
+    k_windows = torch.gather(k_padded_expanded, -2, gather_indices)
+
+    # reshape q for multiplication
+    q_reshaped = q.unsqueeze(-2)  # [Batch, num_heads, SeqLen, 1, d_k]
+
+    # Compute attention scores by the dot product
+    attention_scores = torch.matmul(q_reshaped, k_windows.transpose(-1, -2))  # [Batch, num_heads, SeqLen, 1, window_size]
+    attention_scores = attention_scores / math.sqrt(embed_dim)
+    attention_scores = attention_scores.squeeze(-2)  # [Batch, num_heads, SeqLen, window_size]
+
+    # expand attention_scores to full matrix
+    # initialize the full attention score matrix with float('-inf')
+    if is_multihead:
+        full_attention_scores = torch.zeros((batch_size, num_heads, seq_len, seq_len), device=attention_scores.device)
+    else:
+        full_attention_scores = torch.zeros((batch_size, seq_len, seq_len), device=attention_scores.device)
+    # compute the valid indices for each element in the attention window
+    idx = torch.arange(seq_len).unsqueeze(1) + torch.arange(-window_size // 2, window_size // 2 + 1).unsqueeze(0)
+    idx = idx.clamp(0, seq_len - 1)  # Ensure the indices are within valid range
+    # expand the indices to match the dimensions of full_attention_scores
+    if is_multihead:
+        idx = idx.unsqueeze(0).unsqueeze(0).expand(batch_size, num_heads, -1, -1)
+        full_attention_scores.scatter_add_(3, idx, attention_scores)
+    else:
+        idx = idx.unsqueeze(0).expand(batch_size, -1, -1)
+        full_attention_scores.scatter_add_(2, idx, attention_scores)
+
+    full_attention_scores = torch.where(full_attention_scores == 0.0000,
+                                        torch.tensor(float('-inf'),
+                                                     dtype=full_attention_scores.dtype), full_attention_scores)
+    # Apply padding
+    if padding_mask is not None:
+        if is_multihead:
+            padding_mask = padding_mask.unsqueeze(-2).unsqueeze(-2)
+        else:
+            padding_mask = padding_mask.unsqueeze(-2)
+        full_attention_scores.masked_fill_(padding_mask == 0, float('-inf'))
+        full_attention_scores.masked_fill_(padding_mask.transpose(-1, -2) == 0, float('-inf'))
+
+    attention = F.softmax(full_attention_scores, dim=-1)
+    values = torch.matmul(attention, v)
     # ========================
-
-
     return values, attention
 
 
@@ -84,7 +176,7 @@ class MultiHeadAttention(nn.Module):
         # TODO:
         # call the sliding window attention function you implemented
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        values, attention = sliding_window_attention(q, k, v, self.window_size, padding_mask)
         # ========================
 
         values = values.permute(0, 2, 1, 3) # [Batch, SeqLen, Head, Dims]
