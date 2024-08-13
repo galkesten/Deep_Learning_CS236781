@@ -59,7 +59,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     # 1) Implement the function without using for loops.
     # 2) DON'T compute all dot products and then remove the uneccessary comptutations
     #    (You can compute the dot products for any entry, even if it corresponds to padding, as long as it is within the window).
-    # Aside from these two rules, you are free to implement the function as you wish. 
+    # Aside from these two rules, you are free to implement the function as you wish.
     ## HINT: There are several ways to implement this function, and while you are free to implement it however you may wish,
     ## some are more intuitive than others. We suggest you to consider the following:
     ## Think how you can obtain the indices corresponding to the entries in the sliding windows using tensor operations (without loops),
@@ -67,10 +67,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     # ====== YOUR CODE: ======
     ###### sliding_window_attention
     half_window_size = window_size // 2
-    batch_size = q.size()[0]
     num_heads = q.size()[1]
-    seq_len = q.size()[-2]
-    embed_dim = q.size()[-1]
     is_multihead = q.dim() == 4
 
     # padding the key and value tensors to handle the edges
@@ -78,7 +75,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     k_padded = F.pad(k, padding, mode='constant', value=0)
 
     # creating the index tensor for gathering the queries and keys
-    k_indices = torch.arange(0, k_padded.size()[-2])
+    k_indices = torch.arange(0, k_padded.size()[-2], device=k.device)
     k_indices_unfolded = k_indices.unfold(0, window_size+1, 1)
 
     # Expand the indices for all batches and heads
@@ -111,30 +108,32 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     idx = torch.arange(seq_len).unsqueeze(1) + torch.arange(-window_size // 2, window_size // 2 + 1).unsqueeze(0)
     idx = idx.clamp(0, seq_len - 1)  # Ensure the indices are within valid range
     # expand the indices to match the dimensions of full_attention_scores
+    full_attention_scores = full_attention_scores.detach()
     if is_multihead:
         idx = idx.unsqueeze(0).unsqueeze(0).expand(batch_size, num_heads, -1, -1)
-        full_attention_scores.scatter_add_(3, idx, attention_scores)
+        full_attention_scores = full_attention_scores.scatter_add_(3, idx, attention_scores)
     else:
         idx = idx.unsqueeze(0).expand(batch_size, -1, -1)
-        full_attention_scores.scatter_add_(2, idx, attention_scores)
+        full_attention_scores= full_attention_scores.scatter_add_(2, idx, attention_scores)
 
     full_attention_scores = torch.where(full_attention_scores == 0.0000,
                                         torch.tensor(float('-inf'),
                                                      dtype=full_attention_scores.dtype), full_attention_scores)
-    # Apply padding
+    # Apply padding, following a similar idea as dropout
     if padding_mask is not None:
         if is_multihead:
             padding_mask = padding_mask.unsqueeze(-2).unsqueeze(-2)
         else:
             padding_mask = padding_mask.unsqueeze(-2)
-        full_attention_scores.masked_fill_(padding_mask == 0, float('-inf'))
-        full_attention_scores.masked_fill_(padding_mask.transpose(-1, -2) == 0, float('-inf'))
+        full_attention_scores = full_attention_scores.detach()
+        full_attention_scores = full_attention_scores.masked_fill_(padding_mask == 0, float('-inf'))
+        full_attention_scores = full_attention_scores.masked_fill_(padding_mask.transpose(-1, -2) == 0, float('-inf'))
 
     attention = F.softmax(full_attention_scores, dim=-1)
+    attention[torch.isnan(attention)] = 0.0  # replace nan with 0.0
     values = torch.matmul(attention, v)
     # ========================
     return values, attention
-
 
 
 class MultiHeadAttention(nn.Module):
@@ -258,7 +257,18 @@ class EncoderLayer(nn.Module):
         #   3) Apply a feed-forward layer to the output of step 2, and then apply dropout again.
         #   4) Add a second residual connection and normalize again.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # 1
+        attn_output = self.self_attn(x, padding_mask)
+        attn_output = self.dropout(attn_output)
+        # 2
+        residual_connection = x + attn_output
+        x2 = self.norm1(residual_connection)
+        # 3
+        feed_forward_output = self.feed_forward(x2)
+        feed_forward_output = self.dropout(feed_forward_output)
+        # 4
+        residual_connection = feed_forward_output + x2
+        x = self.norm2(residual_connection)
         # ========================
         
         return x
@@ -287,7 +297,7 @@ class Encoder(nn.Module):
         self.classification_mlp = nn.Sequential(
             nn.Linear(embed_dim, hidden_dim),
             nn.Tanh(),
-            nn.Linear(hidden_dim, 1, bias=False)
+            nn.Linear(hidden_dim, 1, bias=True)
             )
         self.dropout = nn.Dropout(dropout)
 
@@ -308,11 +318,20 @@ class Encoder(nn.Module):
         #  5) Apply the classification MLP to the output vector corresponding to the special token [CLS] 
         #     (always the first token) to receive the logits.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        
+        # 1
+        embedding_sentence = self.encoder_embedding(sentence)
+        # 2
+        embedding_sentence = self.positional_encoding(embedding_sentence)
+        # 3
+        x = self.dropout(embedding_sentence)
+
+        # 4
+        for layer in self.encoder_layers:
+            x = layer(x, padding_mask)
+        # 5
+        cls_output = x[:, 0]
+        output = self.classification_mlp(cls_output)
         # ========================
-        
-        
         return output  
     
     def predict(self, sentence, padding_mask):

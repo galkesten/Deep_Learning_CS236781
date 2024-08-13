@@ -4,6 +4,8 @@ Use this module to write your answers to the questions in the notebook.
 Note: Inside the answer strings you can use Markdown format and also LaTeX
 math (delimited with $$).
 """
+import torch
+
 
 # ==============
 # Part 1 answers
@@ -227,7 +229,7 @@ part2_q4 = r"""
 """
 
 # ==============
-
+torch.manual_seed(0)
 # ==============
 # Part 3 answers
 
@@ -236,7 +238,7 @@ PART3_CUSTOM_DATA_URL = None
 
 def part3_transformer_encoder_hyperparams():
     hypers = dict(
-        embed_dim = 0, 
+        embed_dim = 0,
         num_heads = 0,
         num_layers = 0,
         hidden_dim = 0,
@@ -247,7 +249,13 @@ def part3_transformer_encoder_hyperparams():
 
     # TODO: Tweak the hyperparameters to train the transformer encoder.
     # ====== YOUR CODE: ======
-    
+    hypers['embed_dim'] = 128
+    hypers['num_heads'] = 8
+    hypers['num_layers'] = 4
+    hypers['hidden_dim'] = 512
+    hypers['window_size'] = 6
+    hypers['droupout'] = 0.1
+    hypers['lr'] = 1e-4
     # ========================
     return hypers
 

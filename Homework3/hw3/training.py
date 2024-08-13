@@ -102,7 +102,7 @@ class Trainer(abc.ABC):
             test_loss.append(sum(test_result.losses) / len(test_result.losses))
             test_acc.append(test_result.accuracy)
 
-            actual_num_epochs += 1
+            actual_num_epochs = actual_num_epochs + 1
 
             #early stopping
             if best_acc is None or test_result.accuracy > best_acc:
@@ -113,7 +113,7 @@ class Trainer(abc.ABC):
                 # ========================
             else:
                 # ====== YOUR CODE: ======
-                epochs_without_improvement += 1
+                epochs_without_improvement = epochs_without_improvement + 1
                 if early_stopping is not None and epochs_without_improvement >= early_stopping:
                     break
             # ========================
@@ -313,28 +313,28 @@ class RNNTrainer(Trainer):
         return BatchResult(loss.item(), num_correct.item() / seq_len)
 
 
-class VAETrainer(Trainer):
-    def train_batch(self, batch) -> BatchResult:
-        x, _ = batch
-        x = x.to(self.device)  # Image batch (N,C,H,W)
-        # TODO: Train a VAE on one batch.
-        # ====== YOUR CODE: ======
-        raise NotImplementedError()
-        # ========================
-
-        return BatchResult(loss.item(), 1 / data_loss.item())
-
-    def test_batch(self, batch) -> BatchResult:
-        x, _ = batch
-        x = x.to(self.device)  # Image batch (N,C,H,W)
-
-        with torch.no_grad():
-            # TODO: Evaluate a VAE on one batch.
-            # ====== YOUR CODE: ======
-            raise NotImplementedError()    
-            # ========================
-
-        return BatchResult(loss.item(), 1 / data_loss.item())
+# class VAETrainer(Trainer):
+#     def train_batch(self, batch) -> BatchResult:
+#         x, _ = batch
+#         x = x.to(self.device)  # Image batch (N,C,H,W)
+#         # TODO: Train a VAE on one batch.
+#         # ====== YOUR CODE: ======
+#         raise NotImplementedError()
+#         # ========================
+#
+#         return BatchResult(loss.item(), 1 / data_loss.item())
+#
+#     def test_batch(self, batch) -> BatchResult:
+#         x, _ = batch
+#         x = x.to(self.device)  # Image batch (N,C,H,W)
+#
+#         with torch.no_grad():
+#             # TODO: Evaluate a VAE on one batch.
+#             # ====== YOUR CODE: ======
+#             raise NotImplementedError()
+#             # ========================
+#
+#         return BatchResult(loss.item(), 1 / data_loss.item())
 
 
 class TransformerEncoderTrainer(Trainer):
@@ -350,10 +350,19 @@ class TransformerEncoderTrainer(Trainer):
         # TODO:
         #  fill out the training loop.
         # ====== YOUR CODE: ======
-        raise NotImplementedError()
+        # forward pass
+        y_pred = self.model(input_ids, attention_mask).squeeze(-1)
+
+        # Backward pass and optimization step
+        self.optimizer.zero_grad()
+        loss = self.loss_fn(y_pred, label)
+
+        loss.backward()
+        self.optimizer.step()
+
+        predictions = torch.round(torch.sigmoid(y_pred))  # binary classification
+        num_correct = torch.sum(predictions == label)
         # ========================
-        
-        
         
         return BatchResult(loss.item(), num_correct.item())
         
@@ -369,11 +378,12 @@ class TransformerEncoderTrainer(Trainer):
             # TODO:
             #  fill out the testing loop.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            self.model.eval()
+            y_pred = self.model(input_ids, attention_mask).squeeze(-1)
+            loss = self.loss_fn(y_pred, label)
+            predictions = torch.round(torch.sigmoid(y_pred))
+            num_correct = torch.sum(predictions == label)
             # ========================
-
-            
-        
         return BatchResult(loss.item(), num_correct.item())
 
 
