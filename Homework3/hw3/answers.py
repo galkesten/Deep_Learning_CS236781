@@ -148,14 +148,67 @@ def part2_vae_hyperparams():
     return hypers
 
 
-part2_q1 = r"""
-**Your answer:**
+def part3_gan_hyperparams():
+    hypers = dict(
+        batch_size=0, z_dim=0, discriminator_optimizer=dict(type="", lr=0.0, betas=(0.0, 0.0)),
+        generator_optimizer=dict(type="", lr=0.0, betas=(0.0, 0.0)), data_label=0,label_noise=0.0
+    )
+    # TODO: Tweak the hyperparameters to generate a former president.
+    # ====== YOUR CODE: ======
+    hypers["batch_size"] =8
+    hypers["z_dim"] = 100
+    hypers["discriminator_optimizer"] = {
+        "type": "Adam",
+        "lr": 0.0002,
+        "betas": (0.5, 0.999),
+    }
 
+    hypers["generator_optimizer"] = {
+        "type": "Adam",
+        "lr": 0.0002,
+        "betas": (0.5, 0.999),
+    }
+
+    hypers["data_label"] = 0
+    hypers["label_noise"] = 0.4
+    # ========================
+    return hypers
+
+part2_q1 = r"""
+In GANs, we train two networks simultaneously—the generator and the discriminator.
+We use an alternating optimization method, where in one step,
+we optimize the discriminator while keeping the generator fixed. In the next step,
+we fix the discriminator and optimize the generator. These networks are trained with different loss functions.
+
+When training the discriminator, we focus on teaching it to differentiate between real data and fake data,
+assuming the generator is fixed. To do this, we must sample fake data from the generator to train the discriminator.
+However, since the generator's parameters are not being updated in this step (as it's fixed during this step),
+we do not need to maintain the gradients. The purpose of gradients is to optimize the weights in the generator network,
+and we don't optimize the generator during the discriminator optimization step.
+
+On the other hand, when training the generator, our goal is to improve its
+ability to fool the discriminator with the samples it creates. Since the generator aims to improve,
+we do maintain the gradients so that we can optimize the data generation process and make it better over time.
 
 """
 
 part2_q2 = r"""
-**Your answer:**
+1. No, we should not stop GAN training solely based on the generator loss being below a certain threshold. 
+GAN training should ideally be stopped when both the generator and discriminator reach a point of Nash equilibrium,
+where neither network can improve significantly without the other also improving, indicating a balance in their
+adversarial game. Our goal is not simply to see the generator loss decrease,
+as is common in other machine learning settings. If the generator loss consistently decreases during training,
+it might suggest that the discriminator is too weak, allowing the generator to fool it with samples that aren't
+necessarily realistic. Therefore, it's important to also monitor the discriminator loss, ensuring it isn't too high
+(indicating a weak model) or too low (indicating a very strong model that could prevent the generator from
+learning effectively).What we're aiming for is to find that Nash equilibrium point, which is generally challenging to identify.
+Instead of just focusing on loss reduction, better indicators for stopping training include monitoring the losses of 
+both models and checking when they aren't improving significantly, reflecting the zero-sum nature of GANs. 
+Another indicator is the value of the discriminator loss. At the optimal point of Nash equilibrium, 
+the discriminator should have difficulty differentiating between real and fake data,
+resulting in a classification probability of around 0.5 for both. 
+This would correspond to a cross-entropy loss for the discriminator close to 0.6. 
+
 
 
 """

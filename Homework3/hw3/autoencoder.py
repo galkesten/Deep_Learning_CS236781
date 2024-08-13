@@ -22,24 +22,24 @@ class EncoderCNN(nn.Module):
         # mimicking the dcgan architecture of the original paper https://github.com/soumith/dcgan.torch/blob/master/main.lua
 
         #input is (in_channels) x H_in X W_in- no batch normalization af first conv
-        modules.append(nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1))
+        modules.append(nn.Conv2d(in_channels, 64, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         #state size 64 x H_in/2 X W_in/2
         # Second conv layer
-        modules.append(nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1))
+        modules.append(nn.Conv2d(64, 128, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(128))
         modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         # state size 128 x H_in/4 X W_in/4
         # Third conv layer
-        modules.append(nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1))
+        modules.append(nn.Conv2d(128, 256, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(256))
         modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         # state size 256 x H_in/8 X W_in/8
         # Fourth conv layer
-        modules.append(nn.Conv2d(256, out_channels, kernel_size=4, stride=2, padding=1))
+        modules.append(nn.Conv2d(256, out_channels, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(512))
         modules.append(nn.LeakyReLU(0.2, inplace=True))
 
@@ -69,15 +69,15 @@ class DecoderCNN(nn.Module):
         # ====== YOUR CODE: ======
         modules.append(nn.ConvTranspose2d(in_channels, 256, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(256))
-        modules.append(nn.ReLU(True))
+        modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         modules.append(nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(128))
-        modules.append(nn.ReLU(True))
+        modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         modules.append(nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1, bias=False))
         modules.append(nn.BatchNorm2d(64))
-        modules.append(nn.ReLU(True))
+        modules.append(nn.LeakyReLU(0.2, inplace=True))
 
         modules.append(nn.ConvTranspose2d(64, out_channels, kernel_size=4, stride=2, padding=1, bias=False))
         # ========================
