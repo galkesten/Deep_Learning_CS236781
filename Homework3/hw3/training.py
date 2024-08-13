@@ -399,11 +399,18 @@ class FineTuningTrainer(Trainer):
         #  fill out the training loop.
         # ====== YOUR CODE: ======
 
-        raise NotImplementedError()
-        
+        forward_pass_results = self.model(input_ids=input_ids, attention_mask=attention_masks, labels=labels)
+        loss, logits = forward_pass_results.loss, forward_pass_results.logits
+
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        y_pred = torch.argmax(logits, dim=1)
+        num_correct = torch.sum(y_pred == labels)
         # ========================
         
-        return BatchResult(loss, num_correct)
+        return BatchResult(loss.item(), num_correct.item())
         
     def test_batch(self, batch) -> BatchResult:
         
@@ -415,6 +422,9 @@ class FineTuningTrainer(Trainer):
             # TODO:
             #  fill out the training loop.
             # ====== YOUR CODE: ======
-            raise NotImplementedError()
+            forward_pass_results = self.model(input_ids=input_ids, attention_mask=attention_masks, labels=labels)
+            loss, logits = forward_pass_results.loss, forward_pass_results.logits
+            y_pred = torch.argmax(logits, dim=1)
+            num_correct = torch.sum(y_pred == labels)
             # ========================
-        return BatchResult(loss, num_correct)
+        return BatchResult(loss.item(), num_correct.item())

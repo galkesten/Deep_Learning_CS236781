@@ -281,7 +281,25 @@ part4_q1 = r"""
 """
 
 part4_q2 = r"""
-**Your answer:**
+If we were to fine-tune only the middle layers of a pre-trained model while freezing the last layers,
+the results might be worse than the usual approach of fine-tuning the last layers.
+The model's layers operate hierarchically, with the early and middle layers capturing basic relationships
+and dependencies in the input data, and these relationships become more complex as we move deeper into the model.
+This is similar to how convolutional layers in CNNs gradually capture more detailed features,
+such as edges and textures progressing to more complex patterns. These early and middle layers help the model
+build a general representation of the input, which can be useful across different tasks.
+
+The last layers, however, are more specific to the task at hand and are designed to take these learned representations
+and apply them to produce the desired output. If we fine-tune only the middle layers and freeze the last ones,
+there could be a mismatch: the fine-tuned middle layers might generate updated representations of the input,
+but the frozen last layers, which aren’t adapted to these changes, might not be able to
+effectively use these new representations. This can lead to degraded performance because the final layers might not be
+aligned with the new features learned by the middle layers.
+
+That said, there are cases where fine-tuning the middle layers while keeping the last layers frozen could actually be 
+beneficial. For example, in situations where there’s a significant shift in the data distribution, fine-tuning the
+middle layers could help the model adapt to these changes by improving how the data is represented internally,
+rather than just making adjustments at the classifier level in the final layers.
 
 
 """
@@ -300,8 +318,36 @@ part4_q4 = r"""
 """
 
 part4_q5 = r"""
-**Your answer:**
+Next Sentence Prediction (NSP) is one of the pre-training tasks used in BERT,
+where the model is trained to predict whether two given sentences are consecutive in the original text.
+During pre-training, BERT is provided with pairs of sentences—50% of the time, the second sentence is the actual
+next sentence that follows the first in the corpus, labeled as "IsNext," while in the other 50% of cases,
+the second sentence is a randomly selected sentence from the corpus, labeled as "NotNext."
+The prediction occurs using the output of the [CLS] token, which is the first token in BERT’s input sequence and is
+designed to aggregate information from the entire sequence. The loss function used for NSP is binary cross-entropy,
+where the model predicts the probability that the second sentence is the true next sentence,
+and the loss is calculated based on whether the model's prediction matches the true label.
 
+
+We believe that NSP is not a crucial part of pre-training for BERT. Our reasoning is based on two key points:
+
+Firstly, the authors of BERT included NSP as a pre-training task to help the model understand relationships
+between sentences, which they believed was crucial for certain tasks like Question Answering (QA)
+and Natural Language Inference (NLI). They assumed that the MLM task alone could not fully capture
+the inter-sentence relationships needed for these tasks. However, follow-up research,
+like that in RoBERTa, has shown that removing the NSP task did not harm—and in some cases even improved—performance
+on downstream tasks. Moreover, DistilBERT (the model we use in our homework) also does not use NSP in pre-training,
+suggesting that this task is not as essential as initially thought.
+
+Secondly, we argue that NSP might indeed be redundant and potentially even confusing for the model.
+The primary pre-training objective in BERT, MLM, already forces the model to learn rich contextual representations by
+predicting masked words based on their surrounding context. This process inherently requires the model to understand
+relationships between words and phrases, which often span across sentence boundaries. Therefore, MLM alone can capture
+much of the inter-sentence coherence that NSP aims to address, making NSP redundant. Additionally,
+the way NSP is implemented—by pairing sentences that either do or do not follow each other—creates an artificial setup. 
+The negative examples, which are randomly selected sentences, do not necessarily represent meaningful alternatives
+in natural language. This could lead the model to learn patterns that aren't actually useful for real-world tasks,
+further questioning the utility of NSP in pre-training.
 
 """
 
