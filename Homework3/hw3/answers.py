@@ -212,20 +212,20 @@ resulting in a classification probability of around 0.5 for both.
 This would correspond to a cross-entropy loss for the discriminator close to 0.6. 
 
 
-
+2.
+If the discriminator's loss remains constant, it may indicate that the discriminator has reached a point of
+convergence where it struggles to distinguish between real and fake data, resulting in output probabilities close
+to 0.5 and an approximate loss of 0.693. However, even slight variations in these outputs can provide the generator
+with enough gradient information to continue refining its generated data. As a result, the generator can still make
+subtle improvements, leading to a gradual decrease in its loss, even though the discriminator’s performance has
+stabilized.
 """
 
 part2_q3 = r"""
-**Your answer:**
-
-
-
 """
 
 part2_q4 = r"""
 **Your answer:**
-
-
 """
 
 # ==============
@@ -319,19 +319,44 @@ That said, there are cases where fine-tuning the middle layers while keeping the
 beneficial. For example, in situations where there’s a significant shift in the data distribution, fine-tuning the
 middle layers could help the model adapt to these changes by improving how the data is represented internally,
 rather than just making adjustments at the classifier level in the final layers.
-
-
 """
 
 
 part4_q3= r"""
-**Your answer:**
+We can't use BERT for a machine translation task because BERT is an encoder-only model.
+Its output consists of contextual embeddings for the input words, and it is not capable of
+generating sequences in an auto-regressive way (one word at a time, like in the original Transformer).
+In translation, the target sentence must be generated token by token, where each token’s prediction is influenced
+by the tokens that have already been generated.
 
+What we need is a sequence-to-sequence architecture for machine translation,
+which means we need to add a decoder to BERT. So yes, the architecture is going to change:
+we will use an encoder-decoder architecture.
 
+BERT would act as the encoder, processing the source text into contextualized embeddings.
+A newly added Transformer-based decoder, like GPT, would then generate the translation in an auto-regressive manner,
+producing the target sequence one token at a time. The decoder uses the embeddings from BERT and the previously
+generated tokens to predict the next word, ensuring each word is generated sequentially based on the context of
+what has already been translated.
+
+We will likely need to adjust the pre-training. BERT is pre-trained on tasks like Masked Language Modeling (MLM) 
+and Next Sentence Prediction (NSP), which are not designed for sequence generation. 
+These tasks help BERT create contextual representations of words, making it more suitable for tasks like
+classification. To better suit machine translation, we can train the model directly on the machine translation task, 
+as we saw in the tutorials. Alternatively, we can pre-train the model on more general tasks where it learns to 
+generate a target sequence from a source sequence. For example, BART uses a denoising autoencoder approach for 
+pre-training, where the input sequence is corrupted (e.g., by masking or shuffling) and the model is trained to
+reconstruct the original sequence.
+After such pre-training, we can then fine-tune the model specifically for the machine translation task.
 """
 
 part4_q4 = r"""
-**Your answer:**
+One of the reasons to choose an RNN over a Transformer is its ability to generate infinitely long text.
+RNNs process sequences sequentially, one step at a time, allowing them to continue generating text without any
+predefined limit on sequence length. This makes RNNs especially well-suited for tasks that require producing very
+long or unbounded sequences. On the other hand, Transformers,
+due to their architectural design, usually handle fixed-length sequences,
+which restricts their capability to generate or manage infinitely long text.
 
 
 """
@@ -347,27 +372,17 @@ designed to aggregate information from the entire sequence. The loss function us
 where the model predicts the probability that the second sentence is the true next sentence,
 and the loss is calculated based on whether the model's prediction matches the true label.
 
-
-We believe that NSP is not a crucial part of pre-training for BERT. Our reasoning is based on two key points:
-
-Firstly, the authors of BERT included NSP as a pre-training task to help the model understand relationships
-between sentences, which they believed was crucial for certain tasks like Question Answering (QA)
-and Natural Language Inference (NLI). They assumed that the MLM task alone could not fully capture
-the inter-sentence relationships needed for these tasks. However, follow-up research,
-like that in RoBERTa, has shown that removing the NSP task did not harm—and in some cases even improved—performance
-on downstream tasks. Moreover, DistilBERT (the model we use in our homework) also does not use NSP in pre-training,
-suggesting that this task is not as essential as initially thought.
-
-Secondly, we argue that NSP might indeed be redundant and potentially even confusing for the model.
-The primary pre-training objective in BERT, MLM, already forces the model to learn rich contextual representations by
-predicting masked words based on their surrounding context. This process inherently requires the model to understand
-relationships between words and phrases, which often span across sentence boundaries. Therefore, MLM alone can capture
-much of the inter-sentence coherence that NSP aims to address, making NSP redundant. Additionally,
-the way NSP is implemented—by pairing sentences that either do or do not follow each other—creates an artificial setup. 
-The negative examples, which are randomly selected sentences, do not necessarily represent meaningful alternatives
-in natural language. This could lead the model to learn patterns that aren't actually useful for real-world tasks,
-further questioning the utility of NSP in pre-training.
-
+We believe that NSP is not a crucial part of pre-training for BERT. The authors of BERT included NSP to help the model
+understand relationships between sentences, which they believed was crucial for tasks like Question Answering (QA) and
+Natural Language Inference (NLI), assuming that the MLM task alone could not fully capture these inter-sentence
+relationships. However, follow-up research, such as in RoBERTa, has shown that removing the NSP task did not
+harm—and in some cases even improved—performance on downstream tasks. Moreover, DistilBERT, the model we use in
+our homework, also does not use NSP in pre-training, suggesting that this task is not as essential as initially
+thought. We think these empirical results are due to the NSP task being too easy for a model like BERT,
+which is trained on vast amounts of data. The task involves distinguishing between an actual next sentence and
+a randomly selected one, and the model can quickly learn patterns that make this distinction relatively straightforward,
+such as relying on simple cues like topical consistency or sentence flow. As a result, the task's loss becomes low
+too quickly, not encouraging the model to learn the deeper inter-sentence relationships as intended. 
 """
 
 
