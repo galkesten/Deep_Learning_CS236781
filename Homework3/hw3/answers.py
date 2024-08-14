@@ -253,7 +253,7 @@ def part3_transformer_encoder_hyperparams():
     hypers['num_heads'] = 8
     hypers['num_layers'] = 4
     hypers['hidden_dim'] = 512
-    hypers['window_size'] = 6
+    hypers['window_size'] = 100
     hypers['droupout'] = 0.1
     hypers['lr'] = 1e-4
     # ========================
@@ -264,13 +264,32 @@ def part3_transformer_encoder_hyperparams():
 
 part3_q1 = r"""
 **Your answer:**
+Stacking encoder layers that use sliding-window attention results in a broader context in the final layer due to the cumulative effect of each layer's context expansion.
 
+In a single layer of sliding-window attention, each token can attend to its local neighborhood defined by the window size.
+ When multiple such layers are stacked, the effective context of each token increases because tokens within the window 
+ of a higher layer can attend to tokens in the windows of the previous layer. This concept is similar to the idea of
+  a receptive field in Convolutional Neural Networks (CNNs), where stacking layers increases the receptive field, enabling each neuron to capture more context from the input.
+
+Specifically, if a single layer of sliding-window attention covers a context of w tokens, after l layers, the effective context each token can attend to becomes approximately l×w tokens.
+This gradual expansion allows the model to capture increasingly broader context information as it goes deeper into the network, 
+eventually enabling the final layer to access a much wider context across the sequence, despite each layer itself only attending to a small, local window.
 """
 
 part3_q2 = r"""
 **Your answer:**
-
-
+Dilated Sliding Window To further increase the receptive field without increasing computation, the sliding window can be “dilated”. 
+In dilated sliding-window attention, instead of attending to a continuous sequence of tokens within a fixed window, 
+the attention is computed over tokens that are spaced out by a fixed stride or dilation rate d. 
+This allows each token to attend to a broader, but sparser set of neighboring tokens, 
+effectively increasing the context that each token can access without increasing the window size.
+Dilated Window: For a given token at position i, instead of attending to tokens in the range [i−w/2,i+w/2], it attends to tokens at positions 
+i±d×k, where k is an integer such that 0≤k<w/d. This creates a "dilated" window where attention is paid to every d-th token within a larger range, rather than every token in a small range.
+recognizing that local tokens may often carry more relevant information, 
+a hybrid approach can be employed, c
+ombining dilated attention with regular sliding-window attention. 
+For instance, each token could attend to a few immediate neighbors (dense attention) while also attending to several more distant tokens (dilated attention). 
+This strategy provides a balance between capturing local details and accessing broader context.
 """
 
 

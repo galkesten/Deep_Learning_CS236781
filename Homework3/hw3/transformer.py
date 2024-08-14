@@ -66,16 +66,21 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     ## and then use these indices to compute the dot products directly.
     # ====== YOUR CODE: ======
     ###### sliding_window_attention
+    device = q.device
+    k = k.to(device)
+    v = v.to(device)
+    if padding_mask is not None:
+        padding_mask = padding_mask.to(device)
     half_window_size = window_size // 2
     num_heads = q.size()[1]
     is_multihead = q.dim() == 4
 
     # padding the key and value tensors to handle the edges
     padding = (0, 0, half_window_size, half_window_size)
-    k_padded = F.pad(k, padding, mode='constant', value=0)
+    k_padded = F.pad(k, padding, mode='constant', value=0).to(device)
 
     # creating the index tensor for gathering the queries and keys
-    k_indices = torch.arange(0, k_padded.size()[-2], device=k.device)
+    k_indices = torch.arange(0, k_padded.size()[-2], device=device)
     k_indices_unfolded = k_indices.unfold(0, window_size+1, 1)
 
     # Expand the indices for all batches and heads
@@ -88,7 +93,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
         gather_indices = expanded_indices.unsqueeze(-1).expand(-1, -1, -1, embed_dim)
         k_padded_expanded = k_padded.unsqueeze(1).expand(-1, seq_len, -1, -1)
 
-    k_windows = torch.gather(k_padded_expanded, -2, gather_indices)
+    k_windows = torch.gather(k_padded_expanded, -2, gather_indices).to(device)
 
     # reshape q for multiplication
     q_reshaped = q.unsqueeze(-2)  # [Batch, num_heads, SeqLen, 1, d_k]
@@ -101,11 +106,11 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
     # expand attention_scores to full matrix
     # initialize the full attention score matrix with float('-inf')
     if is_multihead:
-        full_attention_scores = torch.zeros((batch_size, num_heads, seq_len, seq_len), device=attention_scores.device)
+        full_attention_scores = torch.zeros((batch_size, num_heads, seq_len, seq_len), device=device)
     else:
-        full_attention_scores = torch.zeros((batch_size, seq_len, seq_len), device=attention_scores.device)
+        full_attention_scores = torch.zeros((batch_size, seq_len, seq_len), device=device)
     # compute the valid indices for each element in the attention window
-    idx = torch.arange(seq_len).unsqueeze(1) + torch.arange(-window_size // 2, window_size // 2 + 1).unsqueeze(0)
+    idx = torch.arange(seq_len, device=device).unsqueeze(1) + torch.arange(-window_size // 2, window_size // 2 + 1, device=device).unsqueeze(0)
     idx = idx.clamp(0, seq_len - 1)  # Ensure the indices are within valid range
     # expand the indices to match the dimensions of full_attention_scores
     full_attention_scores = full_attention_scores.detach()
@@ -118,7 +123,7 @@ def sliding_window_attention(q, k, v, window_size, padding_mask=None):
 
     full_attention_scores = torch.where(full_attention_scores == 0.0000,
                                         torch.tensor(float('-inf'),
-                                                     dtype=full_attention_scores.dtype), full_attention_scores)
+                                                     dtype=full_attention_scores.dtype, device=device), full_attention_scores)
     # Apply padding, following a similar idea as dropout
     if padding_mask is not None:
         if is_multihead:
@@ -297,7 +302,7 @@ class Encoder(nn.Module):
         self.classification_mlp = nn.Sequential(
             nn.Linear(embed_dim, hidden_dim),
             nn.Tanh(),
-            nn.Linear(hidden_dim, 1, bias=True)
+            nn.Linear(hidden_dim, 1, bias=False)
             )
         self.dropout = nn.Dropout(dropout)
 
