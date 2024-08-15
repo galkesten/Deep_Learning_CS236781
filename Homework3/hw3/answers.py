@@ -188,7 +188,6 @@ However, since the generator's parameters are not being updated in this step (as
 we do not need to maintain the gradients. The purpose of gradients is to optimize the weights in the generator network,
 and we don't optimize the generator during the discriminator optimization step.
 
-
 On the other hand, when training the generator, our goal is to improve its
 ability to fool the discriminator with the samples it creates. Since the generator aims to improve,
 we do maintain the gradients so that we can optimize the data generation process and make it better over time.
@@ -214,21 +213,19 @@ This would correspond to a cross-entropy loss for the discriminator close to 0.6
 
 
 
-2.
-If the discriminator's loss remains constant, it may indicate that the discriminator has reached a point of
-convergence where it struggles to distinguish between real and fake data, resulting in output probabilities close
-to 0.5 and an approximate loss of 0.693. However, even slight variations in these outputs can provide the generator
-with enough gradient information to continue refining its generated data. As a result, the generator can still make
-subtle improvements, leading to a gradual decrease in its loss, even though the discriminator’s performance has
-stabilized.
-
 """
 
 part2_q3 = r"""
+**Your answer:**
+
+
+
 """
 
 part2_q4 = r"""
 **Your answer:**
+
+
 """
 
 # ==============
@@ -254,10 +251,10 @@ def part3_transformer_encoder_hyperparams():
     # ====== YOUR CODE: ======
     hypers['embed_dim'] = 128
     hypers['num_heads'] = 4
-    hypers['num_layers'] = 6
-    hypers['hidden_dim'] = 256
-    hypers['window_size'] = 100
-    hypers['droupout'] = 0.1
+    hypers['num_layers'] = 4
+    hypers['hidden_dim'] = 300 #320
+    hypers['window_size'] = 130 #180
+    hypers['droupout'] = 0.2
     hypers['lr'] = 1e-4
     # ========================
     return hypers
@@ -289,8 +286,7 @@ effectively increasing the context that each token can access without increasing
 Dilated Window: For a given token at position i, instead of attending to tokens in the range [i−w/2,i+w/2], it attends to tokens at positions 
 i±d×k, where k is an integer such that 0≤k<w/d. This creates a "dilated" window where attention is paid to every d-th token within a larger range, rather than every token in a small range.
 recognizing that local tokens may often carry more relevant information, 
-a hybrid approach can be employed, c
-ombining dilated attention with regular sliding-window attention. 
+a hybrid approach can be employed, combining dilated attention with regular sliding-window attention. 
 For instance, each token could attend to a few immediate neighbors (dense attention) while also attending to several more distant tokens (dilated attention). 
 This strategy provides a balance between capturing local details and accessing broader context.
 """
@@ -298,8 +294,17 @@ This strategy provides a balance between capturing local details and accessing b
 
 part4_q1 = r"""
 **Your answer:**
-
-
+The results show that the fine-tuned Distil-BERT model achieved over 80% accuracy on the sentiment analysis task, 
+whereas the encoder trained from scratch in the previous part did not reach 70% accuracy.
+Distil-BERT was pre-trained on a large and diverse corpus of text data, allowing it to learn rich language representations 
+and capture complex patterns in language. 
+When fine-tuned on the IMDB sentiment analysis task, the model was able to leverage this pre-trained knowledge,
+ resulting in better performance on the downstream task.
+  In contrast, the encoder trained from scratch lacked this pre-trained knowledge and had to learn everything from the
+   limited training data available, leading to lower accuracy. 
+   However, while pre-trained models generally perform better on downstream tasks,
+    this advantage is most pronounced in tasks that closely align with the pre-training data. 
+    In some niche or specialized tasks, a scratch-trained model might outperform a pre-trained model if it is specifically tailored to that task.
 """
 
 part4_q2 = r"""
@@ -327,13 +332,12 @@ rather than just making adjustments at the classifier level in the final layers.
 
 
 part4_q3= r"""
-We can't use BERT for a machine translation task because BERT is an encoder-only model.
-Its output consists of contextual embeddings for the input words, and it is not capable of
-generating sequences in an auto-regressive way (one word at a time, like in the original Transformer).
-In translation, the target sentence must be generated token by token, where each token’s prediction is influenced
-by the tokens that have already been generated.
+We can't use BERT for a machine translation task because it was designed for tasks like classification, 
+named entity recognition, and question answering, which involve understanding and processing a single sequence of text.
+  BERT is a bidirectional transformer that learns representations by predicting masked tokens within a sentence, 
+  but it does not generate sequences, which is crucial for tasks like machine translation.
 
-What we need is a sequence-to-sequence architecture for machine translation,
+we need a sequence-to-sequence architecture for machine translation,
 which means we need to add a decoder to BERT. So yes, the architecture is going to change:
 we will use an encoder-decoder architecture.
 
@@ -352,6 +356,8 @@ generate a target sequence from a source sequence. For example, BART uses a deno
 pre-training, where the input sequence is corrupted (e.g., by masking or shuffling) and the model is trained to
 reconstruct the original sequence.
 After such pre-training, we can then fine-tune the model specifically for the machine translation task.
+
+
 """
 
 part4_q4 = r"""
@@ -361,7 +367,8 @@ predefined limit on sequence length. This makes RNNs especially well-suited for 
 long or unbounded sequences. On the other hand, Transformers,
 due to their architectural design, usually handle fixed-length sequences,
 which restricts their capability to generate or manage infinitely long text.
-
+additionally, for tasks with limited data or simpler requirements, RNNs might be preferred due to their simpler architecture and potentially lower computational overhead, 
+especially when working with small sequences or when the task does not benefit significantly from the parallel processing capabilities of Transformers.
 
 """
 
@@ -390,6 +397,10 @@ such as relying on simple cues like topical consistency or sentence flow. As a r
 too quickly, not encouraging the model to learn the deeper inter-sentence relationships as intended. 
 
 """
+
+
+# ==============
+
 
 
 # ==============
