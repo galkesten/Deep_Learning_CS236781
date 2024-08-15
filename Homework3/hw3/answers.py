@@ -59,7 +59,10 @@ If the sequences are too long, the gradients can either vanish or explode, leadi
 and numeric instability. Splitting the text into shorter sequences helps mitigate this issue by limiting the
 number of time steps over which gradients need to be propagated, thus stabilizing the training process.
 
-2)**Memory Limits:** Since RNNs process each token sequentially, we need to keep the hidden state for each time step until we perform backpropagation. If the sequences are too long, the memory consumption can become excessive, potentially exceeding available resources. Splitting the corpus into shorter sequences helps manage memory usage more efficiently.
+2)**Memory Limits:** Since RNNs process each token sequentially, we need to keep the hidden state for each time step 
+until we perform backpropagation. If the sequences are too long, the memory consumption can become excessive,
+potentially exceeding available resources. Splitting the corpus into shorter sequences helps manage memory usage 
+more efficiently.
 
 3 )**Batch Processing:** Even though RNNs process tokens sequentially within each sample, 
 dividing the corpus into smaller sequences allows us to process tokens from different samples in
@@ -70,9 +73,6 @@ faster.
 most relevant for making predictions. Splitting the text into sequences allows the RNN to focus on learning from
 these local contexts, making it easier to model short-term dependencies that are crucial for tasks like sequence
 prediction.
-
-
-
 """
 
 part1_q2 = r"""
@@ -211,7 +211,13 @@ the discriminator should have difficulty differentiating between real and fake d
 resulting in a classification probability of around 0.5 for both. 
 This would correspond to a cross-entropy loss for the discriminator close to 0.6. 
 
-
+2.
+If the discriminator's loss remains constant, it may indicate that the discriminator has reached a point of
+convergence where it struggles to distinguish between real and fake data, resulting in output probabilities close
+to 0.5 and an approximate loss of 0.693. However, even slight variations in these outputs can provide the generator
+with enough gradient information to continue refining its generated data. As a result, the generator can still make
+subtle improvements, leading to a gradual decrease in its loss, even though the discriminator’s performance has
+stabilized.
 
 """
 
@@ -294,17 +300,29 @@ This strategy provides a balance between capturing local details and accessing b
 
 part4_q1 = r"""
 **Your answer:**
-The results show that the fine-tuned Distil-BERT model achieved over 80% accuracy on the sentiment analysis task, 
-whereas the encoder trained from scratch in the previous part did not reach 70% accuracy.
-Distil-BERT was pre-trained on a large and diverse corpus of text data, allowing it to learn rich language representations 
-and capture complex patterns in language. 
-When fine-tuned on the IMDB sentiment analysis task, the model was able to leverage this pre-trained knowledge,
- resulting in better performance on the downstream task.
-  In contrast, the encoder trained from scratch lacked this pre-trained knowledge and had to learn everything from the
-   limited training data available, leading to lower accuracy. 
-   However, while pre-trained models generally perform better on downstream tasks,
-    this advantage is most pronounced in tasks that closely align with the pre-training data. 
-    In some niche or specialized tasks, a scratch-trained model might outperform a pre-trained model if it is specifically tailored to that task.
+The results show that the fine-tuned BERT model achieved significantly higher accuracy on the IMDB sentiment analysis 
+task compared to the Transformer model trained from scratch. Specifically, the Transformer trained from scratch reached 
+nearly 69% accuracy, whereas fine-tuning BERT by updating only the linear layers resulted in 78.3% accuracy.
+Fine-tuning BERT by updating all layers further increased the accuracy to 85%.
+
+These results indicate that for this task, using the pre-trained BERT and fine-tuning it was more effective, 
+with fine-tuning all layers yielding the best performance. The improvement from fine-tuning all layers compared to
+only the linear layers is likely because fine-tuning the entire model allows it to adapt the representations themselves
+to the specific task, rather than simply adjusting the linear layers to match the pre-trained model’s existing
+representations.
+
+We can also see that using BERT (a pre-trained model) generally led to better results than training a model from scratch. 
+This is because BERT was pre-trained on a large and diverse corpus of text data, enabling it to learn rich language
+representations and capture complex patterns in language. When fine-tuned on the IMDB sentiment analysis task,
+the model was able to leverage this pre-trained knowledge, resulting in better performance on the downstream task.
+In contrast, the encoder trained from scratch lacked this pre-trained knowledge and had to learn everything from the 
+limited training data available, with only a small number of epochs, leading to lower accuracy.
+
+This phenomenon is not specific to this task. Pre-trained models generally perform better on downstream tasks because 
+they come with pre-existing knowledge about language structures and patterns, which can be fine-tuned for specific 
+tasks, allowing them to converge faster and perform better even with limited data. However, this advantage is most 
+pronounced in tasks that closely align with the pre-training data. In some niche or specialized tasks,
+a scratch-trained model might outperform a pre-trained model if it is specifically tailored to that task.
 """
 
 part4_q2 = r"""
@@ -332,10 +350,19 @@ rather than just making adjustments at the classifier level in the final layers.
 
 
 part4_q3= r"""
-We can't use BERT for a machine translation task because it was designed for tasks like classification, 
-named entity recognition, and question answering, which involve understanding and processing a single sequence of text.
-  BERT is a bidirectional transformer that learns representations by predicting masked tokens within a sentence, 
-  but it does not generate sequences, which is crucial for tasks like machine translation.
+
+Here's an improved version:
+
+BERT isn't suitable for a machine translation task because it was designed for tasks such as classification,
+named entity recognition, and question answering, which focus on understanding and processing a single sequence of text.
+BERT is a bidirectional transformer, meaning it takes context from both directions (left and right) around each word to
+understand its meaning within a sentence. It achieves this by predicting masked tokens during training, which helps it
+learn deep, contextual representations.
+
+However, machine translation involves generating a new sequence of text, typically in a different language, which
+requires a model to generate tokens sequentially, considering only the previously generated tokens to maintain coherence
+ and context. BERT, as an encoder, is not designed for this type of sequence generation, making it unsuitable for 
+ machine translation tasks in its original form.
 
 we need a sequence-to-sequence architecture for machine translation,
 which means we need to add a decoder to BERT. So yes, the architecture is going to change:
