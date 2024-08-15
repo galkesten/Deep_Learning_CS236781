@@ -362,7 +362,9 @@ class TransformerEncoderTrainer(Trainer):
 
         predictions = torch.round(torch.sigmoid(y_pred))  # binary classification
         num_correct = torch.sum(predictions == label)
-        # ========================s
+
+        # ========================
+
         
         return BatchResult(loss.item(), num_correct.item())
         
@@ -378,6 +380,7 @@ class TransformerEncoderTrainer(Trainer):
             # TODO:
             #  fill out the testing loop.
             # ====== YOUR CODE: ======
+
             y_pred = self.model(input_ids, attention_mask).squeeze(-1)
             loss = self.loss_fn(y_pred, label)
             predictions = torch.round(torch.sigmoid(y_pred))
